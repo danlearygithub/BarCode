@@ -1,8 +1,7 @@
 ﻿using Microsoft.Win32;
-using System;
-using System.Drawing;
+using System.IO;
 using System.Windows;
-using System.Windows.Media.Imaging;
+using System.Windows.Controls;
 
 namespace BarCode
 {
@@ -11,23 +10,30 @@ namespace BarCode
    /// </summary>
    public partial class MainWindow : Window
    {
-      private int _ImageWidth;
-      private int _ImageHeight;
-
       public MainWindow()
       {
          InitializeComponent();
 
          this.Loaded += OnMainWindowLoaded;
+
          this.AllowDrop = true;
          this.Drop += OnMainWindowDrop;
       }
 
+      private bool _Loading;
+      private NewImageFile _NewImageFile;
+      private ImageFile _ExistingImageFile;
+
       private void OnMainWindowLoaded(object sender, RoutedEventArgs e)
       {
+         _Loading = true;
+
          CrossReferenceFileName.Text = Properties.Settings.Default.CrossReferenceSpreadsheet;
-         NewImageWidth.Text = Properties.Settings.Default.ImageWidth.ToString();
-         NewImageHeight.Text = Properties.Settings.Default.ImageHeight.ToString();
+
+         NewImageWidthInInches.Text = Properties.Settings.Default.ImageWidthInInches.ToString();
+         NewImageHeightInInches.Text = Properties.Settings.Default.ImageHeightInInches.ToString();
+
+         _Loading = false;
       }
 
       private void OnMainWindowDrop(object sender, DragEventArgs e)
@@ -38,7 +44,7 @@ namespace BarCode
             string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
 
             // Need to determine if folder or files
-            
+
             // Assuming you have one file that you care about, pass it off to whatever
             // handling code you have defined.
             ProcessImage(files[0]);
@@ -66,51 +72,89 @@ namespace BarCode
 
       private void ProcessImage(string filename)
       {
-         var imageFile = new ImageFile(filename);
+         _ExistingImageFile = new ImageFile(filename);
 
+         ExistingImageWidthInInches.Text = _ExistingImageFile.ImageSize.WidthInInchesRounded(2);
+         ExistingImageHeightInInches.Text = _ExistingImageFile.ImageSize.HeightInInchesRounded(2);
 
-         ExistingImageWidth.Text = imageFile.Width.ToString();
-         ExistingImageHeight.Text = imageFile.Height.ToString();
+         ExistingImageWidthInPixels.Text = _ExistingImageFile.ImageSize.WidthInPixels.ToString();
+         ExistingImageHeightInPixels.Text = _ExistingImageFile.ImageSize.HeightInPixels.ToString();
 
-//         var newImage = imageFile.ResizeImage(_ImageWidth, _ImageHeight);
+         ExistingImageHorizontalRes.Text = _ExistingImageFile.HorizontalResolution.ToString();
+         ExistingImageVerticalRes.Text = _ExistingImageFile.VerticalResolution.ToString();
+         ImageFileName.Text = _ExistingImageFile.FullPath;
 
-         //BitmapEncoder encoder = new PngBitmapEncoder();
-         //encoder.Frames.Add(BitmapFrame.Create(image));
+         var newFilename = Path.Combine(_ExistingImageFile.DirectoryName, _ExistingImageFile.FileNameWithoutExtension + "-revised" + _ExistingImageFile.Extension);
 
-         //using (var fileStream = new System.IO.FileStream(_ImageFile.Filename + "\resized", System.IO.FileMode.Create))
-         //{
-         //   encoder.Save(fileStream);
-         //}
+         var newFileExists = CheckIfNewFileExists(newFilename);
+
+         if (newFileExists)
+         {
+            _NewImageFile = new NewImageFile(newFilename, _ExistingImageFile, NewImageWidthInInches.Text, NewImageHeightInInches.Text);
+
+            NewImageFileName.Text = _NewImageFile.FullPath;
+
+            var saved = _NewImageFile.SaveImage();
+            if (saved)
+{
+               MessageBox.Show($"'{newFilename}' was saved.", "Image saved", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+            }
+         }
       }
 
-      private int ConvertToInt(string number)
+      private static bool CheckIfNewFileExists(string newFilename)
       {
-         return Int32.Parse(number);
-      }
+         if (File.Exists(newFilename))
+         {
+            var messageBoxResult = MessageBox.Show($"'{newFilename}' already exists. Do you want to delete existing one?", "Image already exists.", MessageBoxButton.YesNo, MessageBoxImage.Stop, MessageBoxResult.Yes);
 
-      private int ImageWidth(string width)
-      {
-         _ImageWidth = ConvertToInt(width);
-         return _ImageWidth;
+            if (messageBoxResult == MessageBoxResult.Yes)
+            {
+               try
+               {
+                  File.Delete(newFilename);
+                  return true;
+               }
+               catch
+               {
+                  var errorResult = MessageBox.Show($"'{newFilename}' is not able to deleted. Check if open and close.", "Image can't be deleted.", MessageBoxButton.OK, MessageBoxImage.Stop);
+                  return false;
+               }
+            }
+         }
+         return true;
       }
-
-      private int ImageHeight(string height)
-      {
-         _ImageHeight = ConvertToInt(height);
-         return _ImageHeight;
-      }
-
 
       private void NewImageWidth_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
       {
-         Properties.Settings.Default.ImageWidth = ImageWidth(NewImageWidth.Text);
-         Properties.Settings.Default.Save();
+         if (!_Loading)
+         {
+            var textBox = sender as TextBox;
+
+            var newWidth = ImageSize.ConvertToInches(textBox.Text);
+
+            if (newWidth != null)
+            {
+               Properties.Settings.Default.ImageWidthInInches = newWidth.Value;
+               Properties.Settings.Default.Save();
+            }
+         }
       }
 
       private void NewImageHeight_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
       {
-         Properties.Settings.Default.ImageHeight = ImageHeight(NewImageHeight.Text);
-         Properties.Settings.Default.Save();
+         if (!_Loading)
+         {
+            var textBox = sender as TextBox;
+
+            var newHeight = ImageSize.ConvertToInches(textBox.Text);
+
+            if (newHeight != null)
+            {
+               Properties.Settings.Default.ImageHeightInInches = newHeight.Value;
+               Properties.Settings.Default.Save();
+            }
+         }
       }
    }
 }

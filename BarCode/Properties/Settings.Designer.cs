@@ -37,25 +37,37 @@ namespace BarCode.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("50")]
-        public int ImageWidth {
+        [global::System.Configuration.DefaultSettingValueAttribute("1.25")]
+        public float ImageWidthInInches {
             get {
-                return ((int)(this["ImageWidth"]));
+                return ((float)(this["ImageWidthInInches"]));
             }
             set {
-                this["ImageWidth"] = value;
+                this["ImageWidthInInches"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("50")]
-        public int ImageHeight {
+        [global::System.Configuration.DefaultSettingValueAttribute("0.94")]
+        public float ImageHeightInInches {
             get {
-                return ((int)(this["ImageHeight"]));
+                return ((float)(this["ImageHeightInInches"]));
             }
             set {
-                this["ImageHeight"] = value;
+                this["ImageHeightInInches"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.010417")]
+        public float InchesPerPixel {
+            get {
+                return ((float)(this["InchesPerPixel"]));
+            }
+            set {
+                this["InchesPerPixel"] = value;
             }
         }
     }

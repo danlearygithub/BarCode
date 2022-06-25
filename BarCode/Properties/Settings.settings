@@ -5,11 +5,14 @@
     <Setting Name="CrossReferenceSpreadsheet" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="ImageWidth" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">50</Value>
+    <Setting Name="ImageWidthInInches" Type="System.Single" Scope="User">
+      <Value Profile="(Default)">1.25</Value>
     </Setting>
-    <Setting Name="ImageHeight" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">50</Value>
+    <Setting Name="ImageHeightInInches" Type="System.Single" Scope="User">
+      <Value Profile="(Default)">0.94</Value>
+    </Setting>
+    <Setting Name="InchesPerPixel" Type="System.Single" Scope="User">
+      <Value Profile="(Default)">0.010417</Value>
     </Setting>
   </Settings>
 </SettingsFile>
