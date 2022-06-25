@@ -8,22 +8,55 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-
-namespace BarCode.Properties
-{
-   [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-   [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "11.0.0.0")]
-   internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase
-   {
-
-      private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
-
-      public static Settings Default
-      {
-         get
-         {
-            return defaultInstance;
-         }
-      }
-   }
+namespace BarCode.Properties {
+    
+    
+    [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.10.0.0")]
+    internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
+        
+        private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
+        
+        public static Settings Default {
+            get {
+                return defaultInstance;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string CrossReferenceSpreadsheet {
+            get {
+                return ((string)(this["CrossReferenceSpreadsheet"]));
+            }
+            set {
+                this["CrossReferenceSpreadsheet"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("50")]
+        public int ImageWidth {
+            get {
+                return ((int)(this["ImageWidth"]));
+            }
+            set {
+                this["ImageWidth"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("50")]
+        public int ImageHeight {
+            get {
+                return ((int)(this["ImageHeight"]));
+            }
+            set {
+                this["ImageHeight"] = value;
+            }
+        }
+    }
 }
