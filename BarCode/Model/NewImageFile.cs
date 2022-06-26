@@ -1,7 +1,13 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
+using Windows.Globalization;
+using Windows.Graphics.Imaging;
+using Windows.Media.Ocr;
+using Windows.Storage;
+using Windows.Storage.Streams;
 
 namespace BarCode
 {
@@ -54,9 +60,10 @@ namespace BarCode
          catch (System.Exception)
          {
             return false;
-         }  
-        
+         }
+
 
       }
+
    }
 }

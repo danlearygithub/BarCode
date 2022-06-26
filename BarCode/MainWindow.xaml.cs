@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -10,6 +11,7 @@ namespace BarCode
    /// </summary>
    public partial class MainWindow : Window
    {
+
       public MainWindow()
       {
          InitializeComponent();
@@ -74,6 +76,8 @@ namespace BarCode
       {
          _ExistingImageFile = new ImageFile(filename);
 
+         ReadReadBarCode();
+
          ExistingImageWidthInInches.Text = _ExistingImageFile.ImageSize.WidthInInchesRounded(2);
          ExistingImageHeightInInches.Text = _ExistingImageFile.ImageSize.HeightInInchesRounded(2);
 
@@ -96,10 +100,18 @@ namespace BarCode
 
             var saved = _NewImageFile.SaveImage();
             if (saved)
-{
+            {
                MessageBox.Show($"'{newFilename}' was saved.", "Image saved", MessageBoxButton.OK, MessageBoxImage.Exclamation);
             }
          }
+      }
+
+      private void ReadReadBarCode()
+      {
+         var task = Task.Factory.StartNew(() => _ExistingImageFile.ReadBarCodeAsync());
+
+         Task.WaitAll();
+   
       }
 
       private static bool CheckIfNewFileExists(string newFilename)
