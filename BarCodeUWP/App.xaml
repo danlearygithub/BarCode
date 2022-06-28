@@ -14,11 +14,21 @@
             <Setter Property="Height" Value="25" />
             <Setter Property="Width" Value="50" />
 
-
             <Setter Property="HorizontalAlignment" Value="Left" />
             <Setter Property="HorizontalContentAlignment" Value="Left" />
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
+         </Style>
+
+         <Style x:Key="LabelStyle" TargetType="TextBlock">
+            <Setter Property="Margin" Value="2" />
+            <Setter Property="Padding" Value="2" />
+
+            <Setter Property="Height" Value="25" />
+            <Setter Property="Width" Value="60" />
+
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Center" />
          </Style>
 
          <Style x:Key="DisabledTextBoxStyle" TargetType="TextBox"  BasedOn="{StaticResource TextBoxStyle}">

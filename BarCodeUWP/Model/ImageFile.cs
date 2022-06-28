@@ -7,34 +7,29 @@ using Windows.Graphics.Imaging;
 using Windows.Media.Ocr;
 using Windows.Storage;
 using Windows.Storage.Streams;
+using Windows.UI.Xaml.Media.Imaging;
 
-namespace BarCode
+namespace BarCodeUWP
 {
    public class ImageFile : ImageFileBase
    {
-      public string BarCode { get; private set; }
+      public SoftwareBitmap Image { get; protected set; }
+      public StorageFile StorageFile { get; protected set; }
 
-      public ImageFile(string fullPath)
-         : base(fullPath)
+      public double HorizontalResolution => Image.DpiX;
+      public double VerticalResolution => Image.DpiY;
+
+
+      public ImageFile(AppSettings settings, SoftwareBitmap image, StorageFile storageFile)
+         :base(storageFile.Path)
       {
-         Image = Image.FromFile(FullPath);
-         ImageSize = new ImageSize(Image.Width, Image.Height);
-
-         var readTask = Task.Factory.StartNew(() => ReadBarCode());
-         readTask.Wait();
-
-         BarCode = readTask.Result.Result;
-      }
-
-      private async Task<string> ReadBarCode()
-      {
-         var ocrResult = await ReadBarCodeAsync();
-
-         return ocrResult.Text;
+         Image = image;
+         StorageFile = storageFile;
+         ImageSize = new ImageSize(settings.InchesPerPixelSetting, Image.PixelWidth, Image.PixelHeight);
       }
 
       // https://medium.com/dataseries/using-windows-10-built-in-ocr-with-c-b5ca8665a14e
-      public async Task<OcrResult> ReadBarCodeAsync()
+      public async void ReadBarCodeAsync()
       {
          var language = new Language("en");
 
@@ -46,9 +41,10 @@ namespace BarCode
 
          var engine = OcrEngine.TryCreateFromLanguage(language);
 
-         var a = await engine.RecognizeAsync(bitmap).AsTask();
-         return a;
+         var ocrResult = await engine.RecognizeAsync(bitmap).AsTask();
+
       }
+
 
    }
 }

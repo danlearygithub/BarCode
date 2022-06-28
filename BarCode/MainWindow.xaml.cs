@@ -76,8 +76,6 @@ namespace BarCode
       {
          _ExistingImageFile = new ImageFile(filename);
 
-         ReadReadBarCode();
-
          ExistingImageWidthInInches.Text = _ExistingImageFile.ImageSize.WidthInInchesRounded(2);
          ExistingImageHeightInInches.Text = _ExistingImageFile.ImageSize.HeightInInchesRounded(2);
 
@@ -87,6 +85,7 @@ namespace BarCode
          ExistingImageHorizontalRes.Text = _ExistingImageFile.HorizontalResolution.ToString();
          ExistingImageVerticalRes.Text = _ExistingImageFile.VerticalResolution.ToString();
          ImageFileName.Text = _ExistingImageFile.FullPath;
+         BarCode.Text = _ExistingImageFile.BarCode;
 
          var newFilename = Path.Combine(_ExistingImageFile.DirectoryName, _ExistingImageFile.FileNameWithoutExtension + "-revised" + _ExistingImageFile.Extension);
 
@@ -106,13 +105,7 @@ namespace BarCode
          }
       }
 
-      private void ReadReadBarCode()
-      {
-         var task = Task.Factory.StartNew(() => _ExistingImageFile.ReadBarCodeAsync());
-
-         Task.WaitAll();
-   
-      }
+     
 
       private static bool CheckIfNewFileExists(string newFilename)
       {

@@ -52,7 +52,7 @@ namespace BarCodeUWP
 
       private void HeaderTitle_LayoutUpdated(object sender, object e)
       {
-         border.Margin = new Thickness(HeaderTitle.ActualWidth + 10, 10, 3, 3);
+         border.Margin = new Thickness(HeaderTitle.ActualWidth + 15, 10, 3, 3);
       }
    }
 }

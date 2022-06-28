@@ -27,6 +27,7 @@
                <RowDefinition Height="*"/>
                <RowDefinition Height="*"/>
                <RowDefinition Height="*"/>
+               <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                <ColumnDefinition Width="136" />
@@ -82,6 +83,13 @@
             <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" Style="{StaticResource StackPanelStyle}">
                <TextBox x:Name="ImageFileName" Style="{StaticResource FileNameTextBoxStyle}" Width="400"/>
             </StackPanel>
+
+            <Label Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="0">BarCode</Label>
+
+            <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" Style="{StaticResource StackPanelStyle}">
+               <TextBox x:Name="BarCode" Style="{StaticResource DisabledTextBoxStyle}" Width="120"/>
+            </StackPanel>
+
          </Grid>
 
       </GroupBox>
@@ -118,6 +126,8 @@
             <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Style="{StaticResource StackPanelStyle}">
                <TextBox x:Name="NewImageFileName" Style="{StaticResource FileNameTextBoxStyle}"  Width="400"/>
             </StackPanel>
+
+
          </Grid>
 
       </GroupBox>
