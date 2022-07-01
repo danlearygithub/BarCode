@@ -15,12 +15,12 @@ namespace BarCode
    {
       private ImageFile _ExistingImageFile;
 
-      public NewImageFile(string fullPath, ImageFile existingImageFile, string widthInInches, string heightInInches)
+      public NewImageFile(string fullPath, ImageFile existingImageFile)
          : base(fullPath)
       {
          _ExistingImageFile = existingImageFile;
 
-         ImageSize = new ImageSize(widthInInches, heightInInches);
+         ImageSize = new ImageSize(_ExistingImageFile.ImageSize.WidthInInches, _ExistingImageFile.ImageSize.HeightInInches, _ExistingImageFile.ImageSize.HorizontalPixelsPerInch, _ExistingImageFile.ImageSize.VerticalPixelsPerInch);
          Image = ResizeImage(_ExistingImageFile.Image, ImageSize.WidthInPixels, ImageSize.HeightInPixels);
       }
 

@@ -4,6 +4,7 @@
              xmlns:local="clr-namespace:BarCode"
              StartupUri="MainWindow.xaml">
    <Application.Resources>
+
       <ResourceDictionary>
 
          <Style x:Key="TextBoxStyle" TargetType="TextBox">
@@ -19,7 +20,7 @@
             <Setter Property="VerticalContentAlignment" Value="Center" />
          </Style>
 
-         <Style x:Key="DisabledTextBoxStyle" TargetType="TextBox"  BasedOn="{StaticResource TextBoxStyle}">
+         <Style x:Key="DisabledTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource TextBoxStyle}">
             <Setter Property="IsEnabled" Value="False" />
          </Style>
 
@@ -37,6 +38,13 @@
 
             <Setter Property="HorizontalAlignment" Value="Left" />
             <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+         </Style>
+
+         <Style x:Key="MessageStyle" TargetType="Label" BasedOn="{StaticResource LabelStyle}">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
          </Style>
@@ -62,6 +70,17 @@
             <Setter Property="Margin" Value="5" />
             <Setter Property="Padding" Value="5" />
          </Style>
+
+         <Style x:Key="BorderStyle" TargetType="Border">
+            <Setter Property="Margin" Value="5" />
+            <Setter Property="Padding" Value="5" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+
+            <Setter Property="BorderBrush" Value="LightBlue" />
+            <Setter Property="BorderThickness" Value="2" />
+         </Style>
+
       </ResourceDictionary>
    </Application.Resources>
 </Application>

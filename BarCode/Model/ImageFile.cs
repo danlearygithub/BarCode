@@ -18,7 +18,7 @@ namespace BarCode
          : base(fullPath)
       {
          Image = Image.FromFile(FullPath);
-         ImageSize = new ImageSize(Image.Width, Image.Height);
+         ImageSize = new ImageSize(Image.Width, Image.Height, Image.HorizontalResolution, Image.VerticalResolution);
 
          var readTask = Task.Factory.StartNew(() => ReadBarCode());
          readTask.Wait();

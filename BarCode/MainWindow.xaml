@@ -3,133 +3,35 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:BarCode"
         mc:Ignorable="d"
-        Title="Bar Code Image Converter" Height="500" Width="600">
+        Title="Bar Code Image Converter" Height="460" Width="600">
+
+   <Window.Resources>
+      <local:AppSettings x:Key="AppSettings" />
+   </Window.Resources>
 
    <StackPanel>
 
-      <GroupBox Header="Cross Reference Spreadsheet" Style="{StaticResource GroupBoxStyle}">
+      <GroupBox x:Name="SpreadsheetGroupBox" Header="Cross Reference Spreadsheet" Style="{StaticResource GroupBoxStyle}" >
 
          <StackPanel x:Name="CrossRefPanel" Style="{StaticResource StackPanelStyle}">
             <Button x:Name="OpenCrossReferenceButton" Click="OpenCrossReferenceButton_Click" Style="{StaticResource ButtonStyle}">Open spreadsheet</Button>
             <StackPanel Orientation="Horizontal" Style="{StaticResource StackPanelStyle}">
                <Label Style="{StaticResource LabelStyle}">Filename</Label>
-               <TextBox x:Name="CrossReferenceFileName" Style="{StaticResource FileNameTextBoxStyle}" Width="450"></TextBox>
+               <TextBox x:Name="CrossReferenceFileName" Style="{StaticResource FileNameTextBoxStyle}" Width="450" Text="{Binding Source={StaticResource AppSettings}, Path=CrossReferenceSpreadsheet, Mode=OneWay}"></TextBox>
             </StackPanel>
+            <StackPanel Orientation="Horizontal" Style="{StaticResource StackPanelStyle}">
+               <Label Style="{StaticResource LabelStyle}">UPC Column Name</Label>
+               <TextBox x:Name="CrossReferenceColumnName" Style="{StaticResource TextBoxStyle}" Width="150" Text="{Binding Source={StaticResource AppSettings}, Path=CrossReferenceUPCColumnName, Mode=TwoWay}"></TextBox>
+            </StackPanel>
+
          </StackPanel>
       </GroupBox>
 
-      <GroupBox Header="Existing Image" Style="{StaticResource GroupBoxStyle}">
+      <Border Style="{StaticResource BorderStyle}" AllowDrop="True" Drop="Border_Drop"  Height="250" Width="{Binding ActualWidth, ElementName=SpreadsheetGroupBox}">
+         <Label Style="{StaticResource MessageStyle}" Content="{Binding Path=DropMessage, Mode=OneWay}" d:Content="Drop file, multiple files or folder here." />
+      </Border>
 
-         <Grid>
-            <Grid.RowDefinitions>
-               <RowDefinition Height="*"/>
-               <RowDefinition Height="*"/>
-               <RowDefinition Height="*"/>
-               <RowDefinition Height="*"/>
-               <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-               <ColumnDefinition Width="136" />
-               <ColumnDefinition Width="136" />
-               <ColumnDefinition Width="115" />
-               <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-
-            <Label Style="{StaticResource LabelStyle}" Grid.Row="0" Grid.Column="0" Width="70">Width</Label>
-
-            <StackPanel Orientation="Vertical" Grid.Row="0" Grid.Column="1" Style="{StaticResource StackPanelStyle}">
-               <StackPanel Orientation="Horizontal" Style="{StaticResource StackPanelStyle}">
-                  <TextBox x:Name="ExistingImageWidthInInches" Style="{StaticResource DisabledTextBoxStyle}"/>
-                  <Label Style="{StaticResource LabelStyle}">inches</Label>
-               </StackPanel>
-               <StackPanel Orientation="Horizontal" Style="{StaticResource StackPanelStyle}">
-                  <TextBox x:Name="ExistingImageWidthInPixels" Style="{StaticResource DisabledTextBoxStyle}"/>
-                  <Label Style="{StaticResource LabelStyle}">pixels</Label>
-               </StackPanel>
-            </StackPanel>
-
-            <Label Style="{StaticResource LabelStyle}" Grid.Row="0" Grid.Column="2" Width="70">Height</Label>
-
-            <StackPanel Orientation="Vertical" Grid.Row="0" Grid.Column="3" Style="{StaticResource StackPanelStyle}">
-               <StackPanel Orientation="Horizontal" Style="{StaticResource StackPanelStyle}">
-                  <TextBox x:Name="ExistingImageHeightInInches" Style="{StaticResource DisabledTextBoxStyle}" Height="24" />
-                  <Label Style="{StaticResource LabelStyle}">inches</Label>
-               </StackPanel>
-
-               <StackPanel Orientation="Horizontal" Style="{StaticResource StackPanelStyle}">
-                  <TextBox x:Name="ExistingImageHeightInPixels" Style="{StaticResource DisabledTextBoxStyle}" Height="24" />
-                  <Label Style="{StaticResource LabelStyle}">pixels</Label>
-               </StackPanel>
-
-            </StackPanel>
-
-            <Label Style="{StaticResource LabelStyle}" Grid.Row="1" Grid.Column="0" Width="118">Horizontal Resolution</Label>
-
-            <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="1" Style="{StaticResource StackPanelStyle}">
-               <TextBox x:Name="ExistingImageHorizontalRes" Style="{StaticResource DisabledTextBoxStyle}"/>
-               <Label Style="{StaticResource LabelStyle}">dpi</Label>
-            </StackPanel>
-
-            <Label Style="{StaticResource LabelStyle}" Grid.Row="1" Grid.Column="2" Width="102">Vertical Resolution</Label>
-
-            <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="3" Style="{StaticResource StackPanelStyle}">
-               <TextBox x:Name="ExistingImageVerticalRes" Style="{StaticResource DisabledTextBoxStyle}"/>
-               <Label Style="{StaticResource LabelStyle}">dpi</Label>
-            </StackPanel>
-
-            <Label Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="0">Filename</Label>
-
-            <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" Style="{StaticResource StackPanelStyle}">
-               <TextBox x:Name="ImageFileName" Style="{StaticResource FileNameTextBoxStyle}" Width="400"/>
-            </StackPanel>
-
-            <Label Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="0">BarCode</Label>
-
-            <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" Style="{StaticResource StackPanelStyle}">
-               <TextBox x:Name="BarCode" Style="{StaticResource DisabledTextBoxStyle}" Width="120"/>
-            </StackPanel>
-
-         </Grid>
-
-      </GroupBox>
-
-      <GroupBox Header="New Image" Style="{StaticResource GroupBoxStyle}">
-         <Grid>
-            <Grid.RowDefinitions>
-               <RowDefinition Height="*"/>
-               <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-               <ColumnDefinition Width="136" />
-               <ColumnDefinition Width="136" />
-               <ColumnDefinition Width="115" />
-               <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-
-            <Label Style="{StaticResource LabelStyle}" Grid.Row="0" Grid.Column="0">Width</Label>
-
-            <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="1" Style="{StaticResource StackPanelStyle}">
-               <TextBox x:Name="NewImageWidthInInches" Style="{StaticResource TextBoxStyle}" TextChanged="NewImageWidth_TextChanged"></TextBox>
-               <Label Style="{StaticResource LabelStyle}">inches</Label>
-            </StackPanel>
-
-            <Label Style="{StaticResource LabelStyle}" Grid.Row="0" Grid.Column="2">Height</Label>
-
-            <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="3" Style="{StaticResource StackPanelStyle}">
-               <TextBox x:Name="NewImageHeightInInches" Style="{StaticResource TextBoxStyle}" TextChanged="NewImageHeight_TextChanged"></TextBox>
-               <Label Style="{StaticResource LabelStyle}">inches</Label>
-            </StackPanel>
-
-            <Label Style="{StaticResource LabelStyle}" Grid.Row="1" Grid.Column="0">Filename</Label>
-
-            <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Style="{StaticResource StackPanelStyle}">
-               <TextBox x:Name="NewImageFileName" Style="{StaticResource FileNameTextBoxStyle}"  Width="400"/>
-            </StackPanel>
-
-
-         </Grid>
-
-      </GroupBox>
    </StackPanel>
 </Window>

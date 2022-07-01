@@ -3,56 +3,69 @@ using System.Drawing;
 
 namespace BarCode
 {
-   public class ImageSize 
+   public class ImageSize
    {
       private Size _SizeInPixels;
 
-      public ImageSize(string widthInInches, string heightInInches)
-      {
-         var widthInPixels = ConvertInchesToPixels(widthInInches);
-         var heightInPixels = ConvertInchesToPixels(heightInInches);
+      // DPI
+      public float HorizontalPixelsPerInch { get; private set; }
 
-         if ((widthInInches != null) && (heightInPixels != null))
+      // DPI
+      public float VerticalPixelsPerInch { get; private set; }
+
+      public ImageSize(float widthInInches, float heightInInches, float horizontalPixelsPerInch, float verticalPixelsPerInch)
+      {
+         var widthInPixels = ConvertInchesToPixels(horizontalPixelsPerInch, widthInInches);
+         var heightInPixels = ConvertInchesToPixels(verticalPixelsPerInch, heightInInches);
+
+         HorizontalPixelsPerInch = horizontalPixelsPerInch;
+         VerticalPixelsPerInch = verticalPixelsPerInch;
+
+         if ((widthInInches != 0) && (heightInPixels != 0))
          {
-            _SizeInPixels = new Size(widthInPixels.Value, heightInPixels.Value);
+            _SizeInPixels = new Size(widthInPixels, heightInPixels);
          }
          else
          {
             throw new InvalidOperationException($"Can't convert 'widthInInches' 'heightInInches'");
          }
-
       }
 
-      public ImageSize(int widthInPixels, int heightInPixels)
+      public ImageSize(int widthInPixels, int heightInPixels, float horizontalPixelsPerInch, float verticalPixelsPerInch)
       {
          _SizeInPixels = new Size(widthInPixels, heightInPixels);
+
+         HorizontalPixelsPerInch = horizontalPixelsPerInch;
+         VerticalPixelsPerInch = verticalPixelsPerInch;
       }
 
       public int WidthInPixels => _SizeInPixels.Width;
       public int HeightInPixels => _SizeInPixels.Height;
 
-      public static float InchesPerPixel => Properties.Settings.Default.InchesPerPixel;
-      public static int PixelsPerInch => (int)(1 / InchesPerPixel);
-
-      public float WidthInInches => WidthInPixels * InchesPerPixel;
+      public float WidthInInches => WidthInPixels / HorizontalPixelsPerInch;
       public string WidthInInchesRounded(int numberOfDecimals) => Math.Round(WidthInInches, numberOfDecimals).ToString();
 
-      public float HeightInInches => HeightInPixels * InchesPerPixel;
+      public float HeightInInches => HeightInPixels / VerticalPixelsPerInch;
       public string HeightInInchesRounded(int numberOfDecimals) => Math.Round(HeightInInches, numberOfDecimals).ToString();
 
-      public static float? ConvertPixelsToInches(string measurementInPixels)
+      private int ConvertInchesToPixels(float inchesPerPixel, float inches)
       {
-         int? pixels = ConvertToPixels(measurementInPixels);
+         return (int)(inches / inchesPerPixel);
+      }
 
-         if (pixels is null)
+      private float? ConvertPixelsToInches(float inchesPerPixel, string pixels)
+      {
+         int? convertedPixels = ConvertToPixels(pixels);
+
+         if (convertedPixels is null)
          {
             return null;
          }
 
-         return (int)(pixels.Value * InchesPerPixel);
+         return (int)(convertedPixels.Value * inchesPerPixel);
       }
 
-      public static int? ConvertToPixels(string measurement)
+      private int? ConvertToPixels(string measurement)
       {
          int result;
 
@@ -66,19 +79,19 @@ namespace BarCode
          }
       }
 
-      public static int? ConvertInchesToPixels(string measurementInInches)
+      private int? ConvertInchesToPixels(float pixelsPerInch, string inches)
       {
-         float? inches = ConvertToInches(measurementInInches);
+         float? convertedInches = ConvertToInches(inches);
 
-         if (inches is null)
+         if (convertedInches is null)
          {
             return null;
          }
 
-         return (int)(inches.Value * PixelsPerInch);
+         return (int)(convertedInches.Value * pixelsPerInch);
       }
 
-      public static float? ConvertToInches(string measurement)
+      private float? ConvertToInches(string measurement)
       {
          float result;
 

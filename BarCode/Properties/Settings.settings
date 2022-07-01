@@ -14,5 +14,11 @@
     <Setting Name="InchesPerPixel" Type="System.Single" Scope="User">
       <Value Profile="(Default)">0.010417</Value>
     </Setting>
+    <Setting Name="SupportedImageFileTypes" Type="System.Collections.Specialized.StringCollection" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="CrossReferenceUPCColumnName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">SalonCentric UPC</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
