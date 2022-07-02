@@ -15,20 +15,26 @@ namespace BarCode
    {
       private ImageFile _ExistingImageFile;
 
-      public NewImageFile(string fullPath, ImageFile existingImageFile)
+      public NewImageFile(string fullPath, ImageFile existingImageFile, AppSettings settings)
          : base(fullPath)
       {
          _ExistingImageFile = existingImageFile;
 
-         ImageSize = new ImageSize(_ExistingImageFile.ImageSize.WidthInInches, _ExistingImageFile.ImageSize.HeightInInches, _ExistingImageFile.ImageSize.HorizontalPixelsPerInch, _ExistingImageFile.ImageSize.VerticalPixelsPerInch);
+         var newWidthInches = settings.ImageWidthInInches;
+         var newHeightInInches = settings.ImageHeightInInches;
+         
+         // Text at top
+        // newHeight += 50;
+
+         ImageSize = new ImageSize(newWidthInches, newHeightInInches, _ExistingImageFile.ImageSize.HorizontalPixelsPerInch, _ExistingImageFile.ImageSize.VerticalPixelsPerInch);
          Image = ResizeImage(_ExistingImageFile.Image, ImageSize.WidthInPixels, ImageSize.HeightInPixels);
       }
 
       // https://stackoverflow.com/questions/1922040/how-to-resize-an-image-c-sharp
-      private Bitmap ResizeImage(Image existingImage, int width, int height)
+      private Bitmap ResizeImage(Image existingImage, int widthInPixels, int heightInPixels)
       {
-         var destRect = new Rectangle(0, 0, width, height);
-         var destImage = new Bitmap(width, height);
+         var destRect = new Rectangle(0, 0, widthInPixels, heightInPixels);
+         var destImage = new Bitmap(widthInPixels, heightInPixels);
 
          destImage.SetResolution(existingImage.HorizontalResolution, existingImage.VerticalResolution);
 

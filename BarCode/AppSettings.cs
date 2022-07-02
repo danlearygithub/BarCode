@@ -1,6 +1,7 @@
 ﻿using BarCode.Properties;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace BarCode
@@ -121,9 +122,15 @@ namespace BarCode
          }
       }
 
+      public string SupportedImageFileTypesString
+      { 
+         get 
+         {
+            var types = SupportedImageFileTypes.Select(x => x.ToString());
+            return string.Join(", ", types);
 
-
-
+         }
+      }
       public bool ImageFileTypeIsSupported(string imageFileType)
       {
          return SupportedImageFileTypes.Contains(imageFileType.ToLower());

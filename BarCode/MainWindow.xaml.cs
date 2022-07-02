@@ -20,7 +20,17 @@ namespace BarCode
          InitializeComponent();
 
          this.Loaded += OnMainWindowLoaded;
+
+         _Window.Closing += MainWindow_Closing;
          this.DataContext = this;
+      }
+
+      private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+      {
+         if (_CrossReferenceSpreadsheet != null)
+         {
+            _CrossReferenceSpreadsheet.Close();
+         }
       }
 
       private NewImageFile _NewImageFile;
@@ -100,15 +110,28 @@ namespace BarCode
 
       private void ProcessOneImage(string filename)
       {
-         (bool saved, string newFilename) = ProcessImage(filename);
+         (ProcessImageResult processImageResult, string newFilename) = ProcessImage(filename);
 
-         if (saved)
+         switch (processImageResult)
          {
-            MessageBox.Show($"Created '{newFilename}'", $"Created '{newFilename}'", MessageBoxButton.OK, MessageBoxImage.Information);
-         }
-         else
-         {
-            MessageBox.Show($"Unable to create '{newFilename}' from '{filename}'", $"Unable to save '{newFilename}'", MessageBoxButton.OK, MessageBoxImage.Stop);
+            case ProcessImageResult.NotSaved:
+               MessageBox.Show($"Unable to save '{newFilename}' from '{filename}'", "Unable to save", MessageBoxButton.OK, MessageBoxImage.Stop);
+               break;
+
+            case ProcessImageResult.Saved:
+               MessageBox.Show($"Saved '{newFilename}'", "Saved", MessageBoxButton.OK, MessageBoxImage.Information);
+               break;
+
+            case ProcessImageResult.UnableToFindBarCode:
+               // do nothing - popup already happened
+               break;
+            case ProcessImageResult.UnSupportedFileType:
+               // do nothing - popup already happened
+               break;
+
+            default:
+               MessageBox.Show($"'{processImageResult}' not supported.", $"Not Supported", MessageBoxButton.OK, MessageBoxImage.Information);
+               break;
          }
       }
       private void ProcessMultipleImages(string[] files)
@@ -179,7 +202,6 @@ namespace BarCode
          return true;
       }
 
-
       public IList<string> GetFiles(string folderName, IList<string> searchPatterns)
       {
          List<string> files = new List<string>();
@@ -201,7 +223,15 @@ namespace BarCode
          return files;
       }
 
-      private (bool saved, string newFilename) ProcessImage(string filename, string newDirectoryName = null)
+      public enum ProcessImageResult
+      {
+         NotSaved,
+         Saved,
+         UnableToFindBarCode,
+         UnSupportedFileType
+      }
+
+      private (ProcessImageResult processImageResult, string newFilename) ProcessImage(string filename, string newDirectoryName = null)
       {
          var extension = Path.GetExtension(filename);
 
@@ -227,14 +257,21 @@ namespace BarCode
 
                if (newFileExists)
                {
-                  _NewImageFile = new NewImageFile(newFilename, _ExistingImageFile);
+                  _NewImageFile = new NewImageFile(newFilename, _ExistingImageFile, Settings);
 
-                  return (_NewImageFile.SaveImage(), newFilename);
+
+                  return (_NewImageFile.SaveImage() == true ? ProcessImageResult.Saved : ProcessImageResult.NotSaved , newFilename);
                }
-               return (false, null);
+               return (ProcessImageResult.NotSaved, null);
+            }
+            else {
+               return (ProcessImageResult.UnableToFindBarCode, null);
             }
          }
-         return (false, null);
+         else {
+            MessageBox.Show($"Image '{filename}' type {extension} is not supported. Only {Settings.SupportedImageFileTypesString} are supported.", "Unsupported image type", MessageBoxButton.OK, MessageBoxImage.Error);
+            return (ProcessImageResult.UnSupportedFileType, null);
+         }
       }
 
       private void OpenCrossReferenceButton_Click(object sender, RoutedEventArgs e)

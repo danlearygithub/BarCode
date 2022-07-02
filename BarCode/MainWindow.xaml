@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BarCode"
         mc:Ignorable="d"
-        Title="Bar Code Image Converter" Height="460" Width="600">
+        Title="Bar Code Image Converter" Height="460" Width="600"
+         x:Name="_Window">
 
    <Window.Resources>
       <local:AppSettings x:Key="AppSettings" />

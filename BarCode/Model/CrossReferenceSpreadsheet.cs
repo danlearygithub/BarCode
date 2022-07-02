@@ -36,17 +36,13 @@ namespace BarCode
 
       public CrossReferenceSpreadsheet(string fullPath)
       {
-         var excelApp = new Excel.Application();
-         excelApp.DisplayAlerts = false;
-         excelApp.Visible = false;
-
          _FullPath = fullPath;
 
          _App = new Excel.Application();
          _App.DisplayAlerts = false;
          _App.Visible = false;
 
-         _Workbook = _App.Workbooks.Open(_FullPath);
+         _Workbook = _App.Workbooks.Open(Filename: _FullPath, ReadOnly: true);
 
          if (_Workbook.Worksheets.Count > 1)
          {
@@ -83,15 +79,15 @@ namespace BarCode
          }
       }
 
-      private const string UPCColumnName = "SalonCentric UPC";
+      private const string UPCColumnName = "SalonCentric";
       private const string VendorColumnName = "Vendor";
       private const string DescriptionColumnName = "Description";
 
       private int? FindColumn(string columnHeader)
       {
-         Excel.Range colRange = (Excel.Range)_Worksheet.Rows["1:1"];
+         Excel.Range rowRange = (Excel.Range)_Worksheet.Rows[1];
 
-         Excel.Range resultRange = colRange.Find(
+         Excel.Range resultRange = rowRange.Find(
                          What: columnHeader,
                          LookIn: Excel.XlFindLookIn.xlValues,
                          LookAt: Excel.XlLookAt.xlPart,
@@ -102,7 +98,7 @@ namespace BarCode
 
          if (resultRange is null)
          {
-            MessageBox.Show("Did not found " + UPCColumnName + " in row 1");
+            MessageBox.Show($"Did not find '{columnHeader}' in row 1");
             return null;
          }
          else
@@ -152,20 +148,20 @@ namespace BarCode
 
       private int? FindUPCRowNumber(string UPC)
       {
-         Excel.Range colRange = (Excel.Range)_Worksheet.Columns[_UPCColumn];
+         Excel.Range colRange = (Excel.Range)_Worksheet.Columns[_UPCColumn.Value+1];
 
          Excel.Range resultRange = colRange.Find(
-                         What: UPC,
-                         LookIn: Excel.XlFindLookIn.xlValues,
-                         LookAt: Excel.XlLookAt.xlPart,
-                         SearchOrder: Excel.XlSearchOrder.xlByRows,
-                         SearchDirection: Excel.XlSearchDirection.xlNext
+                      What: UPC,
+                      LookIn: Excel.XlFindLookIn.xlValues,
+                      LookAt: Excel.XlLookAt.xlPart,
+                      SearchOrder: Excel.XlSearchOrder.xlByRows,
+                      SearchDirection: Excel.XlSearchDirection.xlNext
 
-                         );// search searchString in the range, if find result, return a range
+                      );// search searchString in the range, if find result, return a range
 
          if (resultRange is null)
          {
-            MessageBox.Show("Did not found " + UPC + " in column G");
+            //MessageBox.Show($"Did not find {UPC} UPC code in '{UPCColumnName}' column");
             return null;
          }
          else

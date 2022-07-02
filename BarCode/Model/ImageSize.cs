@@ -48,9 +48,9 @@ namespace BarCode
       public float HeightInInches => HeightInPixels / VerticalPixelsPerInch;
       public string HeightInInchesRounded(int numberOfDecimals) => Math.Round(HeightInInches, numberOfDecimals).ToString();
 
-      private int ConvertInchesToPixels(float inchesPerPixel, float inches)
+      private int ConvertInchesToPixels(float pixelsPerInch, float inches)
       {
-         return (int)(inches / inchesPerPixel);
+         return (int)(inches * pixelsPerInch);
       }
 
       private float? ConvertPixelsToInches(float inchesPerPixel, string pixels)
