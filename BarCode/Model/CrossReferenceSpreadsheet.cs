@@ -1,5 +1,8 @@
 ﻿using Microsoft.Office.Interop.Excel;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -11,12 +14,16 @@ namespace BarCode
    {
       public string Vendor { get; private set; }
       public string Description { get; private set; }
+
+      public string RegisDescription { get; private set; }
+
       public string UPC { get; private set; }
 
-      public Product(string vendor, string description, string upc)
+      public Product(string vendor, string description, string regisDescription, string upc)
       {
          Vendor = vendor;
          Description = description;
+         RegisDescription = regisDescription;
          UPC = upc;
       }
    }
@@ -24,7 +31,7 @@ namespace BarCode
    public class CrossReferenceSpreadsheet
    {
       private string _FullPath;
-
+      private AppSettings _AppSettings;
       private Excel.Application _App;
       private Workbook _Workbook;
       private Worksheet _Worksheet;
@@ -34,9 +41,10 @@ namespace BarCode
       private int? _VendorColumn;
       private int? _DescriptionColumn;
 
-      public CrossReferenceSpreadsheet(string fullPath)
+      public CrossReferenceSpreadsheet(AppSettings appSettings)
       {
-         _FullPath = fullPath;
+         _FullPath = appSettings.CrossReferenceSpreadsheet;
+         _AppSettings = appSettings;
 
          _App = new Excel.Application();
          _App.DisplayAlerts = false;
@@ -54,23 +62,11 @@ namespace BarCode
          {
             _Worksheet = (Excel.Worksheet)_Workbook.Worksheets[1];
 
-            _UPCColumn = FindColumn(UPCColumnName);
+            GetAllColumnNames();
+
+            _UPCColumn = FindColumn(_AppSettings.UPCColumnName);
 
             if (_UPCColumn == null)
-            {
-               return;
-            }
-
-            _VendorColumn = FindColumn(VendorColumnName);
-
-            if (_VendorColumn == null)
-            {
-               return;
-            }
-
-            _DescriptionColumn = FindColumn(DescriptionColumnName);
-
-            if (_DescriptionColumn == null)
             {
                return;
             }
@@ -79,38 +75,65 @@ namespace BarCode
          }
       }
 
-      private const string UPCColumnName = "SalonCentric";
+      //private const string UPCColumnName = "SalonCentric";
       private const string VendorColumnName = "Vendor";
       private const string DescriptionColumnName = "Description";
+      private const string RegisDescriptionColumnName = "Regis Description";
 
-      private int? FindColumn(string columnHeader)
+      private ColumnHeadings _ColumnHeadings = new ColumnHeadings();
+
+      private void GetAllColumnNames()
       {
-         Excel.Range rowRange = (Excel.Range)_Worksheet.Rows[1];
+         int columnCount = _Worksheet.UsedRange.Columns.Count;
 
-         Excel.Range resultRange = rowRange.Find(
-                         What: columnHeader,
-                         LookIn: Excel.XlFindLookIn.xlValues,
-                         LookAt: Excel.XlLookAt.xlPart,
-                         SearchOrder: Excel.XlSearchOrder.xlByColumns,
-                         SearchDirection: Excel.XlSearchDirection.xlNext
-
-                         );// search searchString in the range, if find result, return a range
-
-         if (resultRange is null)
+         for (int c = 1; c <= columnCount; c++)
          {
-            MessageBox.Show($"Did not find '{columnHeader}' in row 1");
-            return null;
-         }
-         else
-         {
-            return resultRange.Column;
+            var cell = (Excel.Range)_Worksheet.Cells[1, c];
+
+            if (cell != null)
+            {
+               if (!string.IsNullOrEmpty((string)cell.Value2))
+               {
+                  _ColumnHeadings.Add((string)cell.Value2, c);
+               }
+            }
          }
       }
 
+      private int? FindColumn(string columnHeading)
+      {
+         string columnHeadingUpperCase = columnHeading.ToUpper();
+
+         var heading = _ColumnHeadings.Where(c => c.HeadingUpperCase == columnHeadingUpperCase).FirstOrDefault();
+
+         if (heading is null)
+         {
+            MessageBox.Show($"Did not find '{columnHeading}' in row 1\nExisting Headers = {_ColumnHeadings.ToString()}");
+            return null;
+
+         }
+         return heading.ColumnNumber;
+      }
+
+      //private string ExtractFirstWord(string fullString)
+      //{
+      //   var result = Regex.Match(fullString, @"^([\w\-]+)");
+
+      //   if (result != null)
+      //   {
+      //      return result.Value;
+      //   }
+      //   return null;
+      //}
 
       public Product FindProduct(string fullPath, string UPC)
       {
          if (!ValidSpreadsheet)
+         {
+            return null;
+         }
+
+         if (string.IsNullOrEmpty(UPC))
          {
             return null;
          }
@@ -127,17 +150,18 @@ namespace BarCode
 
             if (UPCRowNumber.HasValue)
             {
-               var vendor = FindVendor(UPCRowNumber.Value);
-               var description = FindDescription(UPCRowNumber.Value);
+               var vendor = FindCell(UPCRowNumber.Value, VendorColumnName);
+               var description = FindCell(UPCRowNumber.Value, DescriptionColumnName);
+               var regisDescription = FindCell(UPCRowNumber.Value, RegisDescriptionColumnName);
 
-               if (!string.IsNullOrEmpty(description) && !string.IsNullOrEmpty(description))
+               if (!string.IsNullOrEmpty(description) && !string.IsNullOrEmpty(description) && !string.IsNullOrEmpty(regisDescription))
                {
-                  product = new Product(vendor, description, UPCCode);
+                  product = new Product(vendor, description, regisDescription, UPCCode);
                }
                else
                {
-                  // should not do this
-                  throw new InvalidDataException();
+                  MessageBox.Show($"Can't get product information for {UPCCode}", "Missing product information", MessageBoxButton.OK, MessageBoxImage.Error);
+                  return null;
                }
             }
 
@@ -148,7 +172,7 @@ namespace BarCode
 
       private int? FindUPCRowNumber(string UPC)
       {
-         Excel.Range colRange = (Excel.Range)_Worksheet.Columns[_UPCColumn.Value+1];
+         Excel.Range colRange = (Excel.Range)_Worksheet.Columns[_UPCColumn];
 
          Excel.Range resultRange = colRange.Find(
                       What: UPC,
@@ -161,7 +185,7 @@ namespace BarCode
 
          if (resultRange is null)
          {
-            //MessageBox.Show($"Did not find {UPC} UPC code in '{UPCColumnName}' column");
+            MessageBox.Show($"Did not find {UPC} UPC code in '{_AppSettings.UPCColumnName}' column");
             return null;
          }
          else
@@ -172,22 +196,16 @@ namespace BarCode
 
       }
 
-      private string FindVendor(int UPCRowNumber)
+      private string FindCell(int UPCRowNumber, string columnHeading)
       {
-         Excel.Range colRange = (Excel.Range)_Worksheet.Cells[UPCRowNumber, _VendorColumn];
+         var cellColumn = FindColumn(columnHeading);
 
-         if (colRange is null)
+         if (cellColumn is null)
          {
             return null;
+
          }
-         else
-         {
-            return (string)colRange.Value;
-         }
-      }
-      private string FindDescription(int UPCRowNumber)
-      {
-         Excel.Range colRange = (Excel.Range)_Worksheet.Cells[UPCRowNumber, _DescriptionColumn];
+         Excel.Range colRange = (Excel.Range)_Worksheet.Cells[UPCRowNumber, cellColumn];
 
          if (colRange is null)
          {
@@ -206,6 +224,57 @@ namespace BarCode
 
          Marshal.ReleaseComObject(_App);
          _App = null;
+      }
+   }
+
+   public class ColumnHeadings : List<ColumnHeading>
+   {
+      public void Add(string columnHeading, int columnNumber)
+      {
+         var cellValue = RemoveExtraSpacesBetweenWords(ConvertNewLineToSpace(columnHeading));
+
+         this.Add(new ColumnHeading() { Heading = cellValue, HeadingUpperCase = cellValue.ToUpper(), ColumnNumber = columnNumber });
+      }
+
+      private string ConvertNewLineToSpace(string fullString)
+      {
+         var result = Regex.Replace(fullString, "\n", " ");
+
+         if (result != null)
+         {
+            return result;
+         }
+         return null;
+      }
+
+      private string RemoveExtraSpacesBetweenWords(string fullString)
+      {
+         var result = Regex.Replace(fullString, @"\s+", " ");
+
+         if (result != null)
+         {
+            return result;
+         }
+         return null;
+      }
+
+      public override string ToString()
+      {
+         return string.Join(", ", this.Select(columnHeading => $"'{columnHeading.Heading}'"));
+      }
+   }
+
+   public class ColumnHeading
+   {
+      public string Heading;
+      public string HeadingUpperCase;
+      public int ColumnNumber;
+
+
+      public string DebugString()
+      {
+         return $"Heading ='{Heading}', HeadingUpperCase='{HeadingUpperCase}', ColumnNumber={ColumnNumber}";
+         
       }
    }
 }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -20,9 +21,17 @@ namespace BarCode
          InitializeComponent();
 
          this.Loaded += OnMainWindowLoaded;
-
          _Window.Closing += MainWindow_Closing;
          this.DataContext = this;
+
+         Debug.Listeners.Add(new TextWriterTraceListener(Console.Out));
+         Debug.AutoFlush = true;
+         Debug.Indent();
+
+         if (!string.IsNullOrEmpty(Settings.CrossReferenceSpreadsheet))
+         {
+            _CrossReferenceSpreadsheet = new CrossReferenceSpreadsheet(Settings);
+         }
       }
 
       private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -40,22 +49,11 @@ namespace BarCode
 
       private void OnMainWindowLoaded(object sender, RoutedEventArgs e)
       {
-         
       }
 
       private void Border_Drop(object sender, DragEventArgs e)
       {
-
-         if (!string.IsNullOrEmpty(Settings.CrossReferenceSpreadsheet))
-         {
-            _CrossReferenceSpreadsheet = new CrossReferenceSpreadsheet(Settings.CrossReferenceSpreadsheet);
-
-            if (!_CrossReferenceSpreadsheet.ValidSpreadsheet)
-            {
-               return;
-            }
-         }
-         else
+         if (!_CrossReferenceSpreadsheet.ValidSpreadsheet)
          {
             return;
          }
@@ -177,6 +175,7 @@ namespace BarCode
             }
          }
       }
+
       private static bool CheckIfFolderExists(string folder)
       {
          if (Directory.Exists(folder))
@@ -231,7 +230,7 @@ namespace BarCode
          UnSupportedFileType
       }
 
-      private (ProcessImageResult processImageResult, string newFilename) ProcessImage(string filename, string newDirectoryName = null)
+      private (ProcessImageResult processImageResult, string newFilename) ProcessImage(string filename, string newFolder = null)
       {
          var extension = Path.GetExtension(filename);
 
@@ -243,32 +242,35 @@ namespace BarCode
 
             if (product != null)
             {
-               string newFilename;
-               if (newDirectoryName == null)
+               string newFilename = $"{product.Vendor}_{product.RegisDescription}{_ExistingImageFile.Extension}";
+               string newFullPath;
+
+               if (newFolder == null)
                {
-                  newFilename = Path.Combine(_ExistingImageFile.DirectoryName, _ExistingImageFile.FileNameWithoutExtension + "-revised" + _ExistingImageFile.Extension);
+                  newFullPath = Path.Combine(_ExistingImageFile.DirectoryName, newFilename);
                }
                else
                {
-                  newFilename = Path.Combine(newDirectoryName, _ExistingImageFile.FileNameWithoutExtension + "-revised" + _ExistingImageFile.Extension);
+                  newFullPath = Path.Combine(newFolder, newFilename);
                }
 
-               var newFileExists = CheckIfNewFileExists(newFilename);
+               var newFileExists = CheckIfNewFileExists(newFullPath);
 
                if (newFileExists)
                {
-                  _NewImageFile = new NewImageFile(newFilename, _ExistingImageFile, Settings);
+                  _NewImageFile = new NewImageFile(newFullPath, _ExistingImageFile, Settings, product);
 
-
-                  return (_NewImageFile.SaveImage() == true ? ProcessImageResult.Saved : ProcessImageResult.NotSaved , newFilename);
+                  return (_NewImageFile.SaveImage() == true ? ProcessImageResult.Saved : ProcessImageResult.NotSaved, newFilename);
                }
                return (ProcessImageResult.NotSaved, null);
             }
-            else {
+            else
+            {
                return (ProcessImageResult.UnableToFindBarCode, null);
             }
          }
-         else {
+         else
+         {
             MessageBox.Show($"Image '{filename}' type {extension} is not supported. Only {Settings.SupportedImageFileTypesString} are supported.", "Unsupported image type", MessageBoxButton.OK, MessageBoxImage.Error);
             return (ProcessImageResult.UnSupportedFileType, null);
          }
@@ -317,13 +319,26 @@ namespace BarCode
       }
 
       public string DropMessage
-      { 
-         get 
+      {
+         get
          {
+            if (string.IsNullOrEmpty(CrossReferenceFileName.Text))
+            {
+               return "Select Cross Reference spreadsheet first.";
+            }
+
+            if (_CrossReferenceSpreadsheet is null)
+            {
+               return "_CrossReferenceSpreadsheet error";
+            }
+
+            if (!_CrossReferenceSpreadsheet.ValidSpreadsheet)
+            {
+               return "Can't process images until spreadsheet issues are resolved";
+            }
+
             return "Drop file, multiple files or folder here.";
          }
       }
-
-
    }
 }

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BarCode"
         mc:Ignorable="d"
-        Title="Bar Code Image Converter" Height="460" Width="600"
+        Title="Bar Code Image Converter" Height="620" Width="600"
          x:Name="_Window">
 
    <Window.Resources>
@@ -17,17 +17,72 @@
       <GroupBox x:Name="SpreadsheetGroupBox" Header="Cross Reference Spreadsheet" Style="{StaticResource GroupBoxStyle}" >
 
          <StackPanel x:Name="CrossRefPanel" Style="{StaticResource StackPanelStyle}">
+
             <Button x:Name="OpenCrossReferenceButton" Click="OpenCrossReferenceButton_Click" Style="{StaticResource ButtonStyle}">Open spreadsheet</Button>
             <StackPanel Orientation="Horizontal" Style="{StaticResource StackPanelStyle}">
                <Label Style="{StaticResource LabelStyle}">Filename</Label>
                <TextBox x:Name="CrossReferenceFileName" Style="{StaticResource FileNameTextBoxStyle}" Width="450" Text="{Binding Source={StaticResource AppSettings}, Path=CrossReferenceSpreadsheet, Mode=OneWay}"></TextBox>
             </StackPanel>
-            <StackPanel Orientation="Horizontal" Style="{StaticResource StackPanelStyle}">
-               <Label Style="{StaticResource LabelStyle}">UPC Column Name</Label>
-               <TextBox x:Name="CrossReferenceColumnName" Style="{StaticResource TextBoxStyle}" Width="150" Text="{Binding Source={StaticResource AppSettings}, Path=CrossReferenceUPCColumnName, Mode=TwoWay}"></TextBox>
-            </StackPanel>
+
+            <GroupBox Header="Column Names" Style="{StaticResource GroupBoxStyle}" >
+
+               <Grid>
+                  <Grid.RowDefinitions>
+                     <RowDefinition Height="*"/>
+                     <RowDefinition Height="*"/>
+                  </Grid.RowDefinitions>
+                  <Grid.ColumnDefinitions>
+                     <ColumnDefinition Width="*" />
+                     <ColumnDefinition Width="*" />
+                     <ColumnDefinition Width="*" />
+                     <ColumnDefinition Width="*" />
+                  </Grid.ColumnDefinitions>
+
+                  <Label Grid.Row="0" Grid.Column="0" Style="{StaticResource LabelStyle}">Vendor</Label>
+                  <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource TextBoxStyle}" Width="110" Text="{Binding Source={StaticResource AppSettings}, Path=VendorColumnName, Mode=TwoWay}"></TextBox>
+
+                  <Label Grid.Row="0" Grid.Column="2" Style="{StaticResource LabelStyle}">Description</Label>
+                  <TextBox Grid.Row="0" Grid.Column="3" Style="{StaticResource TextBoxStyle}" Width="110" Text="{Binding Source={StaticResource AppSettings}, Path=DescriptionColumnName, Mode=TwoWay}"></TextBox>
+
+                  <Label Grid.Row="1" Grid.Column="0" Style="{StaticResource LabelStyle}">Regis Description</Label>
+                  <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource TextBoxStyle}" Width="110" Text="{Binding Source={StaticResource AppSettings}, Path=RegisDescriptionColumnName, Mode=TwoWay}"></TextBox>
+
+                  <Label Grid.Row="1" Grid.Column="2" Style="{StaticResource LabelStyle}" >UPC</Label>
+                  <TextBox Grid.Row="1" Grid.Column="3" Style="{StaticResource TextBoxStyle}" Width="110" Text="{Binding Source={StaticResource AppSettings}, Path=UPCColumnName, Mode=TwoWay}"></TextBox>
+
+               </Grid>
+            </GroupBox>
 
          </StackPanel>
+      </GroupBox>
+
+      <GroupBox Header="New Image" Style="{StaticResource GroupBoxStyle}">
+
+         <Grid>
+            <Grid.RowDefinitions>
+               <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+               <ColumnDefinition Width="136" />
+               <ColumnDefinition Width="136" />
+               <ColumnDefinition Width="115" />
+               <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Label Style="{StaticResource LabelStyle}" Grid.Row="0" Grid.Column="0">Width</Label>
+
+            <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="1" Style="{StaticResource StackPanelStyle}">
+               <TextBox x:Name="NewImageWidthInInches" Style="{StaticResource TextBoxStyle}" Text="{Binding Source={StaticResource AppSettings}, Path=ImageWidthInInches, Mode=TwoWay}"></TextBox>
+               <Label Style="{StaticResource LabelStyle}">inches</Label>
+            </StackPanel>
+            <Label Style="{StaticResource LabelStyle}" Grid.Row="0" Grid.Column="2">Height</Label>
+
+            <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="3" Style="{StaticResource StackPanelStyle}">
+               <TextBox x:Name="NewImageHeightInInches" Style="{StaticResource TextBoxStyle}" Text="{Binding Source={StaticResource AppSettings}, Path=ImageHeightInInches, Mode=TwoWay}"></TextBox>
+               <Label Style="{StaticResource LabelStyle}">inches</Label>
+            </StackPanel>
+
+         </Grid>
       </GroupBox>
 
       <Border Style="{StaticResource BorderStyle}" AllowDrop="True" Drop="Border_Drop"  Height="250" Width="{Binding ActualWidth, ElementName=SpreadsheetGroupBox}">

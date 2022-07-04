@@ -57,15 +57,54 @@ namespace BarCode
          }
       }
 
-      public string CrossReferenceUPCColumnName
+      public string VendorColumnName
       {
          get
          {
-            return ReadSettings("CrossReferenceUPCColumnName", "");
+            return ReadSettings("VendorColumnName", "Vendor");
          }
          set
          {
-            SaveSettings("CrossReferenceUPCColumnName", value);
+            SaveSettings("VendorColumnName", value);
+            NotifyPropertyChanged();
+         }
+      }
+
+      public string DescriptionColumnName
+      {
+         get
+         {
+            return ReadSettings("DescriptionColumnName", "Description");
+         }
+         set
+         {
+            SaveSettings("DescriptionColumnName", value);
+            NotifyPropertyChanged();
+         }
+      }
+
+      public string RegisDescriptionColumnName
+      {
+         get
+         {
+            return ReadSettings("RegisDescriptionColumnName", "RegisDescription");
+         }
+         set
+         {
+            SaveSettings("RegisDescriptionColumnName", value);
+            NotifyPropertyChanged();
+         }
+      }
+
+      public string UPCColumnName
+      {
+         get
+         {
+            return ReadSettings("UPCColumnName", "SalonCentric UPC");
+         }
+         set
+         {
+            SaveSettings("UPCColumnName", value);
             NotifyPropertyChanged();
          }
       }

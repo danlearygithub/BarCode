@@ -15,8 +15,8 @@ namespace BarCode
 
       public ImageSize(float widthInInches, float heightInInches, float horizontalPixelsPerInch, float verticalPixelsPerInch)
       {
-         var widthInPixels = ConvertInchesToPixels(horizontalPixelsPerInch, widthInInches);
-         var heightInPixels = ConvertInchesToPixels(verticalPixelsPerInch, heightInInches);
+         var widthInPixels = PixelConverter.ConvertInchesToPixels(horizontalPixelsPerInch, widthInInches);
+         var heightInPixels = PixelConverter.ConvertInchesToPixels(verticalPixelsPerInch, heightInInches);
 
          HorizontalPixelsPerInch = horizontalPixelsPerInch;
          VerticalPixelsPerInch = verticalPixelsPerInch;
@@ -48,61 +48,56 @@ namespace BarCode
       public float HeightInInches => HeightInPixels / VerticalPixelsPerInch;
       public string HeightInInchesRounded(int numberOfDecimals) => Math.Round(HeightInInches, numberOfDecimals).ToString();
 
-      private int ConvertInchesToPixels(float pixelsPerInch, float inches)
-      {
-         return (int)(inches * pixelsPerInch);
-      }
+      //private float? ConvertPixelsToInches(float inchesPerPixel, string pixels)
+      //{
+      //   int? convertedPixels = ConvertToPixels(pixels);
 
-      private float? ConvertPixelsToInches(float inchesPerPixel, string pixels)
-      {
-         int? convertedPixels = ConvertToPixels(pixels);
+      //   if (convertedPixels is null)
+      //   {
+      //      return null;
+      //   }
 
-         if (convertedPixels is null)
-         {
-            return null;
-         }
+      //   return (int)(convertedPixels.Value * inchesPerPixel);
+      //}
 
-         return (int)(convertedPixels.Value * inchesPerPixel);
-      }
+      //private int? ConvertToPixels(string measurement)
+      //{
+      //   int result;
 
-      private int? ConvertToPixels(string measurement)
-      {
-         int result;
+      //   if (int.TryParse(measurement, out result))
+      //   {
+      //      return result;
+      //   }
+      //   else
+      //   {
+      //      return null;
+      //   }
+      //}
 
-         if (int.TryParse(measurement, out result))
-         {
-            return result;
-         }
-         else
-         {
-            return null;
-         }
-      }
+      //private int? ConvertInchesToPixels(float pixelsPerInch, string inches)
+      //{
+      //   float? convertedInches = ConvertToInches(inches);
 
-      private int? ConvertInchesToPixels(float pixelsPerInch, string inches)
-      {
-         float? convertedInches = ConvertToInches(inches);
+      //   if (convertedInches is null)
+      //   {
+      //      return null;
+      //   }
 
-         if (convertedInches is null)
-         {
-            return null;
-         }
+      //   return (int)(convertedInches.Value * pixelsPerInch);
+      //}
 
-         return (int)(convertedInches.Value * pixelsPerInch);
-      }
+      //private float? ConvertToInches(string measurement)
+      //{
+      //   float result;
 
-      private float? ConvertToInches(string measurement)
-      {
-         float result;
-
-         if (float.TryParse(measurement, out result))
-         {
-            return result;
-         }
-         else
-         {
-            return null;
-         }
-      }
+      //   if (float.TryParse(measurement, out result))
+      //   {
+      //      return result;
+      //   }
+      //   else
+      //   {
+      //      return null;
+      //   }
+      //}
    }
 }

@@ -85,12 +85,48 @@ namespace BarCode.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("SalonCentric UPC")]
-        public string CrossReferenceUPCColumnName {
+        public string UPCColumnName {
             get {
-                return ((string)(this["CrossReferenceUPCColumnName"]));
+                return ((string)(this["UPCColumnName"]));
             }
             set {
-                this["CrossReferenceUPCColumnName"] = value;
+                this["UPCColumnName"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Vendor")]
+        public string VendorColumnName {
+            get {
+                return ((string)(this["VendorColumnName"]));
+            }
+            set {
+                this["VendorColumnName"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Description")]
+        public string DescriptionColumnName {
+            get {
+                return ((string)(this["DescriptionColumnName"]));
+            }
+            set {
+                this["DescriptionColumnName"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Regis Description")]
+        public string RegisDescriptionColumnName {
+            get {
+                return ((string)(this["RegisDescriptionColumnName"]));
+            }
+            set {
+                this["RegisDescriptionColumnName"] = value;
             }
         }
     }

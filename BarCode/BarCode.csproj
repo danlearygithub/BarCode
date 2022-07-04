@@ -80,6 +80,7 @@
     <Compile Include="Model\CrossReferenceSpreadsheet.cs" />
     <Compile Include="Model\ImageFileBase.cs" />
     <Compile Include="Model\ImageFile.cs" />
+    <Compile Include="Model\PixelConverter.cs" />
     <Compile Include="Model\ImageSize.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>

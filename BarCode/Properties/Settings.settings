@@ -17,8 +17,17 @@
     <Setting Name="SupportedImageFileTypes" Type="System.Collections.Specialized.StringCollection" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="CrossReferenceUPCColumnName" Type="System.String" Scope="User">
+    <Setting Name="UPCColumnName" Type="System.String" Scope="User">
       <Value Profile="(Default)">SalonCentric UPC</Value>
+    </Setting>
+    <Setting Name="VendorColumnName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Vendor</Value>
+    </Setting>
+    <Setting Name="DescriptionColumnName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Description</Value>
+    </Setting>
+    <Setting Name="RegisDescriptionColumnName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Regis Description</Value>
     </Setting>
   </Settings>
 </SettingsFile>

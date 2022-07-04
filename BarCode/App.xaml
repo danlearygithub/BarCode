@@ -79,6 +79,10 @@
 
             <Setter Property="BorderBrush" Value="LightBlue" />
             <Setter Property="BorderThickness" Value="2" />
+
+            <!--https://stackoverflow.com/questions/35105917/grid-or-border-not-allowing-drop-->
+            <!--Need to do this to allow border to do drop--> 
+            <Setter Property="Background" Value="Transparent" />
          </Style>
 
       </ResourceDictionary>
