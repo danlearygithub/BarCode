@@ -14,20 +14,22 @@ namespace BarCode
    {
       private ImageFile _ExistingImageFile;
       private Product _Product;
-      private const int COMMENT_HEIGHT = 40;
+
+      private const int COMMENT_HEIGHT = 55;
+      private const int EXTRA_WIDTH = 150;
 
       public NewImageFile(string fullPath, ImageFile existingImageFile, AppSettings settings, Product product)
          : base(fullPath)
       {
          _ExistingImageFile = existingImageFile;
 
-         var newWidthInches = settings.ImageWidthInInches;
+         var barCodeImageWidthInches = settings.ImageWidthInInches;
          var horizontalPixelsPerInch = _ExistingImageFile.ImageSize.HorizontalPixelsPerInch;
 
-         var newHeightInInches = settings.ImageHeightInInches;
+         var barCodeImageHeightHeightInInches = settings.ImageHeightInInches;
          var verticalPixelsPerInch = _ExistingImageFile.ImageSize.VerticalPixelsPerInch;
 
-         ImageSize = new ImageSize(newWidthInches, newHeightInInches, horizontalPixelsPerInch, verticalPixelsPerInch);
+         ImageSize = new ImageSize(barCodeImageWidthInches, barCodeImageHeightHeightInInches, horizontalPixelsPerInch, verticalPixelsPerInch);
          Image = _ExistingImageFile.Image;
          _Product = product;
       }
@@ -35,15 +37,18 @@ namespace BarCode
       // https://stackoverflow.com/questions/1922040/how-to-resize-an-image-c-sharp
       public (ImageResult result, string exceptionMessage) ResizeImage()
       {
-         var widthInPixels = ImageSize.WidthInPixels + 100;
+         var imageWidthInPixels = ImageSize.WidthInPixels;
+         var widthInPixels = imageWidthInPixels + EXTRA_WIDTH;
+
          var imageHeightInPixels = ImageSize.HeightInPixels;
+         var fullHeightInPixels = imageHeightInPixels + COMMENT_HEIGHT;
 
          try
          {
 
             var imageDestRect = new Rectangle(0, COMMENT_HEIGHT, widthInPixels, imageHeightInPixels);
 
-            using (var newImage = new Bitmap(widthInPixels, imageHeightInPixels + COMMENT_HEIGHT))
+            using (var newImage = new Bitmap(widthInPixels, fullHeightInPixels))
             {
                newImage.SetResolution(Image.HorizontalResolution, Image.VerticalResolution);
 
@@ -66,8 +71,8 @@ namespace BarCode
                   //set area for comment background to white
                   graphics.FillRectangle(Brushes.White, 0, 0, widthInPixels, COMMENT_HEIGHT);
 
-                  AddText(graphics, _Product.Vendor, widthInPixels, 0, 8);
-                  AddText(graphics, _Product.RegisDescription, widthInPixels, 14, 6);
+                  AddText(graphics, _Product.Vendor, width: widthInPixels, y: 0, emSize: 10);
+                  AddText(graphics, _Product.RegisDescription, width: widthInPixels, y: 20, emSize: 8);
                }
 
                newImage.Save(FullPath);

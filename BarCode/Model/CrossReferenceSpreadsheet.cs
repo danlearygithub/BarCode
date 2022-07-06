@@ -10,6 +10,17 @@ using Excel = Microsoft.Office.Interop.Excel;
 
 namespace BarCode
 {
+   public enum SpreadsheetFormatResult
+   {
+      Good,
+      TooManyWorksheets,
+      UPCColumnMissing,
+      VendorColumnMissing,
+      DescriptionColumnMissing,
+      RegisDescriptionColumnMissing
+   }
+
+
    public class Product
    {
       public string Vendor { get; private set; }
@@ -35,8 +46,6 @@ namespace BarCode
       private Excel.Application _App;
       private Workbook _Workbook;
       private Worksheet _Worksheet;
-      public bool ValidSpreadsheet { get; private set; }
-
       private int? _UPCColumn;
 
       public CrossReferenceSpreadsheet(AppSettings appSettings)
@@ -52,7 +61,6 @@ namespace BarCode
 
          if (_Workbook.Worksheets.Count > 1)
          {
-            ValidSpreadsheet = false;
             // too many worksheets
             MessageBox.Show($"There are {_Workbook.Worksheets.Count} worksheets. Can't continue. There should be only 1.", "Too many worksheets", MessageBoxButton.OK, MessageBoxImage.Error);
          }
@@ -61,27 +69,45 @@ namespace BarCode
             _Worksheet = (Excel.Worksheet)_Workbook.Worksheets[1];
 
             GetAllColumnNames();
+            
+            var correctFormat = IsInCorrectFormat;
+            _UPCColumn = FindColumn(UPCColumnName);
 
-            _UPCColumn = FindColumn(_AppSettings.UPCColumnName);
-
-            if (_UPCColumn == null)
+            if (_UPCColumn is null)
             {
                return;
             }
 
-            ValidSpreadsheet = true;
+            if (FindColumn(VendorColumnName) is null)
+            {
+               return;
+            }
+
+            if (FindColumn(DescriptionColumnName) is null)
+            {
+               return;
+            }
+
+            if (FindColumn(RegisDescriptionColumnName) is null)
+            {
+               return;
+            }
+
          }
       }
 
-      //private const string UPCColumnName = "SalonCentric";
-      private const string VendorColumnName = "Vendor";
-      private const string DescriptionColumnName = "Description";
-      private const string RegisDescriptionColumnName = "Regis Description";
 
-      private ColumnHeadings _ColumnHeadings = new ColumnHeadings();
+      private string UPCColumnName => _AppSettings.UPCColumnName;
+      private string VendorColumnName => _AppSettings.VendorColumnName;
+      private string DescriptionColumnName => _AppSettings.DescriptionColumnName;
+      private string RegisDescriptionColumnName => _AppSettings.RegisDescriptionColumnName;
+
+      public ColumnHeadings ColumnHeadings = new ColumnHeadings();
 
       private void GetAllColumnNames()
       {
+         ColumnHeadings.Clear();
+
          int columnCount = _Worksheet.UsedRange.Columns.Count;
 
          for (int c = 1; c <= columnCount; c++)
@@ -92,9 +118,46 @@ namespace BarCode
             {
                if (!string.IsNullOrEmpty((string)cell.Value2))
                {
-                  _ColumnHeadings.Add((string)cell.Value2, c);
+                  ColumnHeadings.Add((string)cell.Value2, c);
                }
             }
+         }
+      }
+
+      public SpreadsheetFormatResult IsInCorrectFormat
+      {
+         get
+         {
+            if (_Workbook.Worksheets.Count > 1)
+            {
+               return SpreadsheetFormatResult.TooManyWorksheets;
+            }
+
+            GetAllColumnNames();
+
+            _UPCColumn = FindColumn(UPCColumnName);
+
+            if (_UPCColumn is null)
+            {
+               return SpreadsheetFormatResult.UPCColumnMissing;
+            }
+
+            if (FindColumn(VendorColumnName) is null)
+            {
+               return SpreadsheetFormatResult.VendorColumnMissing;
+            }
+
+            if (FindColumn(DescriptionColumnName) is null)
+            {
+               return SpreadsheetFormatResult.DescriptionColumnMissing;
+            }
+
+            if (FindColumn(RegisDescriptionColumnName) is null)
+            {
+               return SpreadsheetFormatResult.RegisDescriptionColumnMissing;
+            }
+
+            return SpreadsheetFormatResult.Good;
          }
       }
 
@@ -102,11 +165,11 @@ namespace BarCode
       {
          string columnHeadingUpperCase = columnHeading.ToUpper();
 
-         var heading = _ColumnHeadings.Where(c => c.HeadingUpperCase == columnHeadingUpperCase).FirstOrDefault();
+         var heading = ColumnHeadings.Where(c => c.HeadingUpperCase == columnHeadingUpperCase).FirstOrDefault();
 
          if (heading is null)
          {
-            MessageBox.Show($"Did not find '{columnHeading}' in row 1\nExisting Headers = {_ColumnHeadings.ToString()}");
+            //MessageBox.Show($"Did not find '{columnHeading}' in row 1\nExisting Headers = {ColumnHeadings.ToString()}");
             return null;
 
          }
@@ -115,7 +178,7 @@ namespace BarCode
 
       public Product FindProduct(string fullPath, string UPC)
       {
-         if (!ValidSpreadsheet)
+         if (IsInCorrectFormat != SpreadsheetFormatResult.Good)
          {
             return null;
          }
@@ -127,13 +190,10 @@ namespace BarCode
 
          if (File.Exists(fullPath))
          {
-            // need to remove any spaces 
-            var UPCCode = Regex.Replace(UPC, @"\s+", "");
-
             Product product = null;
 
             // find Vender
-            var UPCRowNumber = FindUPCRowNumber(UPCCode);
+            var UPCRowNumber = FindUPCRowNumber(UPC);
 
             if (UPCRowNumber.HasValue)
             {
@@ -143,11 +203,11 @@ namespace BarCode
 
                if (!string.IsNullOrEmpty(description) && !string.IsNullOrEmpty(description) && !string.IsNullOrEmpty(regisDescription))
                {
-                  product = new Product(vendor, description, regisDescription, UPCCode);
+                  product = new Product(vendor, description, regisDescription, UPC);
                }
                else
                {
-                  MessageBox.Show($"Can't get product information for {UPCCode}", "Missing product information", MessageBoxButton.OK, MessageBoxImage.Error);
+                  MessageBox.Show($"Can't get product information for {UPC}", "Missing product information", MessageBoxButton.OK, MessageBoxImage.Error);
                   return null;
                }
             }

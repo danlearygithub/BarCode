@@ -31,9 +31,12 @@ namespace BarCode
 
             var barCode = readTask.Result.Result;
 
-            if (Regex.IsMatch(barCode, @"^\d+$"))
+            // need to remove any spaces 
+            var UPCCode = Regex.Replace(barCode, @"\s+", "");
+
+            if (Regex.IsMatch(UPCCode, @"^\d+$"))
             {
-               return barCode;
+               return UPCCode;
             }
             else
             {

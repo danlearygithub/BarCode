@@ -86,7 +86,7 @@
       </GroupBox>
 
       <Border Style="{StaticResource BorderStyle}" AllowDrop="True" Drop="Border_Drop"  Height="250" Width="{Binding ActualWidth, ElementName=SpreadsheetGroupBox}">
-         <Label Style="{StaticResource MessageStyle}" Content="{Binding Path=DropMessage, Mode=OneWay}" d:Content="Drop file, multiple files or folder here." />
+         <TextBlock Style="{StaticResource MessageStyle}" Text="{Binding Path=DropMessage, Mode=OneWay}" d:Text="Drop file, multiple files or folder here." />
       </Border>
 
    </StackPanel>

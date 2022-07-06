@@ -52,7 +52,7 @@ namespace BarCode
 
       private void Border_Drop(object sender, DragEventArgs e)
       {
-         if (!_CrossReferenceSpreadsheet.ValidSpreadsheet)
+         if (_CrossReferenceSpreadsheet.IsInCorrectFormat != SpreadsheetFormatResult.Good)
          {
             return;
          }
@@ -317,9 +317,23 @@ namespace BarCode
                return "_CrossReferenceSpreadsheet error";
             }
 
-            if (!_CrossReferenceSpreadsheet.ValidSpreadsheet)
+
+            switch (_CrossReferenceSpreadsheet.IsInCorrectFormat)
             {
-               return "Can't process images until spreadsheet issues are resolved";
+               case SpreadsheetFormatResult.TooManyWorksheets:
+                  return "There are too many worksheets in cross reference spreadsheet. There should be only 1.";
+
+               case SpreadsheetFormatResult.UPCColumnMissing:
+                  return $"UPC column is missing from cross reference spreadsheet. Check column name.\n Existing Headings = {_CrossReferenceSpreadsheet.ColumnHeadings.ToString()}";
+
+               case SpreadsheetFormatResult.VendorColumnMissing:
+                  return $"Vendor column is missing from cross reference spreadsheet. Check column name.\n Existing Headings = {_CrossReferenceSpreadsheet.ColumnHeadings.ToString()}";
+
+               case SpreadsheetFormatResult.DescriptionColumnMissing:
+                  return $"Description column is missing from cross reference spreadsheet. Check column name.\n Existing Headings = {_CrossReferenceSpreadsheet.ColumnHeadings.ToString()}";
+
+               case SpreadsheetFormatResult.RegisDescriptionColumnMissing:
+                  return $"Regis Description column is missing from cross reference spreadsheet. Check column name.\n Existing Headings = {_CrossReferenceSpreadsheet.ColumnHeadings.ToString()}";
             }
 
             return "Drop file, multiple files or folder here.";
