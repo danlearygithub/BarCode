@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.Globalization;
 using Windows.Graphics.Imaging;
@@ -12,18 +13,33 @@ namespace BarCode
 {
    public class ImageFile : ImageFileBase
    {
-      public string BarCode { get; private set; }
+      //public string BarCode { get; private set; }
 
       public ImageFile(string fullPath)
          : base(fullPath)
       {
          Image = Image.FromFile(FullPath);
          ImageSize = new ImageSize(Image.Width, Image.Height, Image.HorizontalResolution, Image.VerticalResolution);
+      }
 
-         var readTask = Task.Factory.StartNew(() => ReadBarCode());
-         readTask.Wait();
+      public string BarCode
+      {
+         get
+         {
+            var readTask = Task.Factory.StartNew(() => ReadBarCode());
+            readTask.Wait();
 
-         BarCode = readTask.Result.Result;
+            var barCode = readTask.Result.Result;
+
+            if (Regex.IsMatch(barCode, @"^\d+$"))
+            {
+               return barCode;
+            }
+            else
+            {
+               return null;
+            }
+         }
       }
 
       private async Task<string> ReadBarCode()

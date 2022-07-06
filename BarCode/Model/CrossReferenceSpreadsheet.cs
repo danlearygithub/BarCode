@@ -38,8 +38,6 @@ namespace BarCode
       public bool ValidSpreadsheet { get; private set; }
 
       private int? _UPCColumn;
-      private int? _VendorColumn;
-      private int? _DescriptionColumn;
 
       public CrossReferenceSpreadsheet(AppSettings appSettings)
       {
@@ -114,17 +112,6 @@ namespace BarCode
          }
          return heading.ColumnNumber;
       }
-
-      //private string ExtractFirstWord(string fullString)
-      //{
-      //   var result = Regex.Match(fullString, @"^([\w\-]+)");
-
-      //   if (result != null)
-      //   {
-      //      return result.Value;
-      //   }
-      //   return null;
-      //}
 
       public Product FindProduct(string fullPath, string UPC)
       {

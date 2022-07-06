@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
-using System.Windows.Controls;
 
 namespace BarCode
 {
@@ -108,16 +107,16 @@ namespace BarCode
 
       private void ProcessOneImage(string filename)
       {
-         (ProcessImageResult processImageResult, string newFilename) = ProcessImage(filename);
+         (ProcessImageResult processImageResult, string newFullPath) = ProcessImage(filename);
 
          switch (processImageResult)
          {
             case ProcessImageResult.NotSaved:
-               MessageBox.Show($"Unable to save '{newFilename}' from '{filename}'", "Unable to save", MessageBoxButton.OK, MessageBoxImage.Stop);
+               MessageBox.Show($"Unable to save '{filename}' to '{newFullPath}'", "Unable to save", MessageBoxButton.OK, MessageBoxImage.Stop);
                break;
 
             case ProcessImageResult.Saved:
-               MessageBox.Show($"Saved '{newFilename}'", "Saved", MessageBoxButton.OK, MessageBoxImage.Information);
+               MessageBox.Show($"Saved '{filename}' to '{newFullPath}'", "Saved", MessageBoxButton.OK, MessageBoxImage.Information);
                break;
 
             case ProcessImageResult.UnableToFindBarCode:
@@ -143,7 +142,7 @@ namespace BarCode
             }
          }
 
-         var msgBox = MessageBox.Show($"Processed {files.Length} images", "Processed multiple images", MessageBoxButton.OK, MessageBoxImage.Question);
+         var msgBox = MessageBox.Show($"Saved {files.Length} images", "Saved multiple images", MessageBoxButton.OK, MessageBoxImage.Question);
       }
 
 
@@ -157,49 +156,15 @@ namespace BarCode
          {
             // need to determine new folder for saving images
 
-            var newFolder = folderName + "-revised";
-
-            var newFolderExists = CheckIfFolderExists(newFolder);
-
-            if (newFolderExists)
+            foreach (var file in allFiles)
             {
-               Directory.CreateDirectory(newFolder);
-
-               foreach (var file in allFiles)
-               {
-                  ProcessImage(file, newFolder);
-               }
-
-               MessageBox.Show($"Created {allFiles.Count} images in '{newFolder}' folder", $"Created images in '{newFolder}' folder", MessageBoxButton.OK, MessageBoxImage.Information);
-
+               ProcessImage(file);
             }
+
+            MessageBox.Show($"Saved {allFiles.Count} images", $"Saved images", MessageBoxButton.OK, MessageBoxImage.Information);
          }
       }
 
-      private static bool CheckIfFolderExists(string folder)
-      {
-         if (Directory.Exists(folder))
-         {
-            var messageBoxResult = MessageBox.Show($"'{folder}' already exists. Do you want to delete?", "Already exists.", MessageBoxButton.YesNo, MessageBoxImage.Stop, MessageBoxResult.Yes);
-
-            if (messageBoxResult == MessageBoxResult.Yes)
-            {
-               try
-               {
-                  Directory.Delete(folder, true);
-
-                  return true;
-               }
-               catch (Exception ex)
-               {
-                  MessageBox.Show($"'{folder}' is not able to be deleted due to '{ex.Message}'.", "Can't be deleted.", MessageBoxButton.OK, MessageBoxImage.Stop);
-                  return false;
-               }
-            }
-            return false;
-         }
-         return true;
-      }
 
       public IList<string> GetFiles(string folderName, IList<string> searchPatterns)
       {
@@ -230,38 +195,56 @@ namespace BarCode
          UnSupportedFileType
       }
 
-      private (ProcessImageResult processImageResult, string newFilename) ProcessImage(string filename, string newFolder = null)
+      private (ProcessImageResult processImageResult, string newFullPath) ProcessImage(string filename)
       {
          var extension = Path.GetExtension(filename);
 
          if (Settings.ImageFileTypeIsSupported(extension))
          {
             _ExistingImageFile = new ImageFile(filename);
+            var barCode = _ExistingImageFile.BarCode;
+
+            if (barCode is null)
+            {
+               MessageBox.Show($"Unable to determine barcode from '{filename}'", $"Unable to get bar code", MessageBoxButton.OK, MessageBoxImage.Error);
+               return (ProcessImageResult.UnableToFindBarCode, null);
+            }
 
             var product = _CrossReferenceSpreadsheet.FindProduct(Settings.CrossReferenceSpreadsheet, _ExistingImageFile.BarCode);
 
             if (product != null)
             {
-               string newFilename = $"{product.Vendor}_{product.RegisDescription}{_ExistingImageFile.Extension}";
-               string newFullPath;
+               string newFolder = Path.Combine(Directory.GetParent(filename).Parent.FullName, product.Vendor);
+               string newFullPath = Path.Combine(newFolder, $"{product.Vendor}_{product.RegisDescription}{_ExistingImageFile.Extension}");
 
-               if (newFolder == null)
+               if (!Directory.Exists(newFolder))
                {
-                  newFullPath = Path.Combine(_ExistingImageFile.DirectoryName, newFilename);
-               }
-               else
-               {
-                  newFullPath = Path.Combine(newFolder, newFilename);
+                  Directory.CreateDirectory(newFolder);
                }
 
-               var newFileExists = CheckIfNewFileExists(newFullPath);
+               var deletedOrDoesNotExist = DeleteFileIfExists(newFullPath);
 
-               if (newFileExists)
+               if (deletedOrDoesNotExist)
                {
                   _NewImageFile = new NewImageFile(newFullPath, _ExistingImageFile, Settings, product);
 
-                  return (_NewImageFile.SaveImage() == true ? ProcessImageResult.Saved : ProcessImageResult.NotSaved, newFilename);
+                  (ImageResult imageResult, string exceptionMessage) = _NewImageFile.ResizeImage();
+
+                  if (imageResult == ImageResult.Saved)
+                  {
+                     return (ProcessImageResult.Saved, newFullPath);
+                  } 
+                  else
+                  {
+                     if (!string.IsNullOrEmpty(exceptionMessage))
+                     {
+                        MessageBox.Show($"Exception occurred when processing '{filename}'. Message: {exceptionMessage}", "Exception", MessageBoxButton.OK, MessageBoxImage.Error);
+                     }
+
+                     return (ProcessImageResult.NotSaved, newFullPath);
+                  }
                }
+
                return (ProcessImageResult.NotSaved, null);
             }
             else
@@ -276,25 +259,7 @@ namespace BarCode
          }
       }
 
-      private void OpenCrossReferenceButton_Click(object sender, RoutedEventArgs e)
-      {
-         var openDialog = new OpenFileDialog();
-         openDialog.DefaultExt = ".xlsx";
-         openDialog.Filter = "Excel Worksheets|*.xlsx|Excel Worksheets|*.xlsm|Excel Worksheets|*.xls";
-
-         CrossReferenceFileName.Text = "";
-         var result = openDialog.ShowDialog();
-
-         if (result == true)
-         {
-            var filename = openDialog.FileName;
-
-            CrossReferenceFileName.Text = filename;
-            Settings.CrossReferenceSpreadsheet = filename;
-         }
-      }
-
-      private static bool CheckIfNewFileExists(string newFilename)
+      private bool DeleteFileIfExists(string newFilename)
       {
          if (File.Exists(newFilename))
          {
@@ -317,6 +282,26 @@ namespace BarCode
          }
          return true;
       }
+
+      private void OpenCrossReferenceButton_Click(object sender, RoutedEventArgs e)
+      {
+         var openDialog = new OpenFileDialog();
+         openDialog.DefaultExt = ".xlsx";
+         openDialog.Filter = "Excel Worksheets|*.xlsx|Excel Worksheets|*.xlsm|Excel Worksheets|*.xls";
+
+         CrossReferenceFileName.Text = "";
+         var result = openDialog.ShowDialog();
+
+         if (result == true)
+         {
+            var filename = openDialog.FileName;
+
+            CrossReferenceFileName.Text = filename;
+            Settings.CrossReferenceSpreadsheet = filename;
+         }
+      }
+
+
 
       public string DropMessage
       {
