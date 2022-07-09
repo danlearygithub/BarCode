@@ -42,14 +42,20 @@
             <Setter Property="VerticalContentAlignment" Value="Center" />
          </Style>
 
-         <Style x:Key="MessageStyle" TargetType="TextBlock">
+         <Style x:Key="TextBlockStyle" TargetType="TextBlock">
             <Setter Property="Margin" Value="2" />
             <Setter Property="Padding" Value="2" />
 
+            <Setter Property="Height" Value="40" />
+
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="TextWrapping" Value="WrapWithOverflow" />
+
+         </Style>
+
+         <Style x:Key="MessageStyle" TargetType="TextBlock" BasedOn="{StaticResource TextBlockStyle}">
             <Setter Property="Height" Value="100" />
-
             <Setter Property="HorizontalAlignment" Value="Center" />
-
             <Setter Property="TextWrapping" Value="WrapWithOverflow" />
          </Style>
 

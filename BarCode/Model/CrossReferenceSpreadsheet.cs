@@ -20,6 +20,14 @@ namespace BarCode
       RegisDescriptionColumnMissing
    }
 
+   public enum SpreadsheetResult
+   {
+      Good,
+      InvalidSpreadsheet,
+      UPCNullOrEmpty,
+      UnableToFindUPC,
+      UnableToFindProduct
+   }
 
    public class Product
    {
@@ -43,15 +51,17 @@ namespace BarCode
    {
       private string _FullPath;
       private AppSettings _AppSettings;
+      private IConsole _Console;
       private Excel.Application _App;
       private Workbook _Workbook;
       private Worksheet _Worksheet;
       private int? _UPCColumn;
 
-      public CrossReferenceSpreadsheet(AppSettings appSettings)
+      public CrossReferenceSpreadsheet(AppSettings appSettings, IConsole console)
       {
          _FullPath = appSettings.CrossReferenceSpreadsheet;
          _AppSettings = appSettings;
+         _Console = console;
 
          _App = new Excel.Application();
          _App.DisplayAlerts = false;
@@ -69,7 +79,7 @@ namespace BarCode
             _Worksheet = (Excel.Worksheet)_Workbook.Worksheets[1];
 
             GetAllColumnNames();
-            
+
             var correctFormat = IsInCorrectFormat;
             _UPCColumn = FindColumn(UPCColumnName);
 
@@ -169,55 +179,60 @@ namespace BarCode
 
          if (heading is null)
          {
-            //MessageBox.Show($"Did not find '{columnHeading}' in row 1\nExisting Headers = {ColumnHeadings.ToString()}");
+            _Console.WriteRedInfoLine($"Did not find '{columnHeading}' in row 1. Existing Headers = {ColumnHeadings.ToString()}");
             return null;
 
          }
          return heading.ColumnNumber;
       }
 
-      public Product FindProduct(string fullPath, string UPC)
+      public (SpreadsheetResult result, Product product) FindProduct(string fullPath, string UPC)
       {
          if (IsInCorrectFormat != SpreadsheetFormatResult.Good)
          {
-            return null;
+            return (SpreadsheetResult.InvalidSpreadsheet, null);
          }
 
          if (string.IsNullOrEmpty(UPC))
          {
-            return null;
+            return (SpreadsheetResult.UPCNullOrEmpty, null);
          }
 
-         if (File.Exists(fullPath))
+         Product product = null;
+
+         var UPCRowNumber = FindUPCRowNumber(fullPath, UPC);
+
+         if (UPCRowNumber.HasValue)
          {
-            Product product = null;
+            var vendor = FindCell(fullPath, UPC, UPCRowNumber.Value, VendorColumnName);
+            var description = FindCell(fullPath, UPC, UPCRowNumber.Value, DescriptionColumnName);
+            var regisDescription = FindCell(fullPath, UPC, UPCRowNumber.Value, RegisDescriptionColumnName);
 
-            // find Vender
-            var UPCRowNumber = FindUPCRowNumber(UPC);
-
-            if (UPCRowNumber.HasValue)
+            if (!string.IsNullOrEmpty(vendor) && !string.IsNullOrEmpty(description) && !string.IsNullOrEmpty(regisDescription))
             {
-               var vendor = FindCell(UPCRowNumber.Value, VendorColumnName);
-               var description = FindCell(UPCRowNumber.Value, DescriptionColumnName);
-               var regisDescription = FindCell(UPCRowNumber.Value, RegisDescriptionColumnName);
+               product = new Product(vendor, description, regisDescription, UPC);
 
-               if (!string.IsNullOrEmpty(description) && !string.IsNullOrEmpty(description) && !string.IsNullOrEmpty(regisDescription))
-               {
-                  product = new Product(vendor, description, regisDescription, UPC);
-               }
-               else
-               {
-                  MessageBox.Show($"Can't get product information for {UPC}", "Missing product information", MessageBoxButton.OK, MessageBoxImage.Error);
-                  return null;
-               }
+               return (SpreadsheetResult.Good, product);
             }
+            else
+            {
+               var message = $"Can't get product information for '{UPC}'";
 
-            return product;
+               _Console.WriteRedInfoLine(fullPath, message);
+               TraceBarCode.LogError(fullPath, message);
+
+               return (SpreadsheetResult.UnableToFindProduct, null); 
+            }
          }
-         return null;
+         else
+         {
+            return (SpreadsheetResult.UnableToFindUPC, product);
+         }
+
+        
       }
 
-      private int? FindUPCRowNumber(string UPC)
+      private int? FindUPCRowNumber(string fullPath, string UPC)
       {
          Excel.Range colRange = (Excel.Range)_Worksheet.Columns[_UPCColumn];
 
@@ -232,23 +247,30 @@ namespace BarCode
 
          if (resultRange is null)
          {
-            MessageBox.Show($"Did not find {UPC} UPC code in '{_AppSettings.UPCColumnName}' column");
+            var message = $"Did not find '{UPC}' UPC code in '{_AppSettings.UPCColumnName}' column";
+
+            _Console.WriteRedInfoLine(fullPath, message);
+            TraceBarCode.LogError(fullPath, message);
+
             return null;
          }
          else
          {
             //then you could handle how to display the row to the label according to resultRange
+            TraceBarCode.LogInfo(fullPath, $"Found '{UPC}' UPC code");
+
             return resultRange.Row;
          }
 
       }
 
-      private string FindCell(int UPCRowNumber, string columnHeading)
+      private string FindCell(string fullPath, string UPC, int UPCRowNumber, string columnHeading)
       {
          var cellColumn = FindColumn(columnHeading);
 
          if (cellColumn is null)
          {
+            _Console.WriteRedInfoLine(fullPath, $"Can't get {columnHeading} for '{UPC}'");
             return null;
 
          }
@@ -321,7 +343,7 @@ namespace BarCode
       public string DebugString()
       {
          return $"Heading ='{Heading}', HeadingUpperCase='{HeadingUpperCase}', ColumnNumber={ColumnNumber}";
-         
+
       }
    }
 }

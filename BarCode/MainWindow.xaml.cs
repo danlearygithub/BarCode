@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 
 namespace BarCode
@@ -23,13 +24,13 @@ namespace BarCode
          _Window.Closing += MainWindow_Closing;
          this.DataContext = this;
 
-         Debug.Listeners.Add(new TextWriterTraceListener(Console.Out));
-         Debug.AutoFlush = true;
-         Debug.Indent();
+         //Debug.Listeners.Add(new TextWriterTraceListener(Console.Out));
+         //Debug.AutoFlush = true;
+         //Debug.Indent();
 
          if (!string.IsNullOrEmpty(Settings.CrossReferenceSpreadsheet))
          {
-            _CrossReferenceSpreadsheet = new CrossReferenceSpreadsheet(Settings);
+            _CrossReferenceSpreadsheet = new CrossReferenceSpreadsheet(Settings, _Console);
          }
       }
 
@@ -50,7 +51,7 @@ namespace BarCode
       {
       }
 
-      private void Border_Drop(object sender, DragEventArgs e)
+      private async void Border_Drop(object sender, DragEventArgs e)
       {
          if (_CrossReferenceSpreadsheet.IsInCorrectFormat != SpreadsheetFormatResult.Good)
          {
@@ -81,8 +82,7 @@ namespace BarCode
             }
             else
             {
-
-               ProcessMultipleImages(files);
+               await ProcessMultipleImages(files);
             }
          }
       }
@@ -105,18 +105,50 @@ namespace BarCode
          return isFolder;
       }
 
-      private void ProcessOneImage(string filename)
+      private async void ProcessOneImage(string filename)
       {
-         (ProcessImageResult processImageResult, string newFullPath) = ProcessImage(filename);
+         (ProcessImageResult processImageResult, string newFullPath) = await ProcessImage(filename);
 
+         ShowResults(filename, processImageResult, newFullPath);
+      }
+
+      private async Task ProcessMultipleImages(string[] files)
+      {
+         _Console.WriteInfoLine($"Processing {files.Length} images");
+         TraceBarCode.LogInfo("ProcessMultipleImages", $"Processing {files.Length} images");
+
+         int savedFileCount = 0;
+
+         foreach (var filename in files)
+         {
+            if (!IsFolder(filename))
+            {
+               // only process files - not folders
+               (ProcessImageResult processImageResult, string newFullPath) = await ProcessImage(filename);
+
+               ShowResults(filename, processImageResult, newFullPath);
+
+               if (processImageResult == ProcessImageResult.Saved)
+               {
+                  savedFileCount++;
+               }
+            }
+         }
+
+         var message = $"Saved {savedFileCount} images out of {files.Length} total images.";
+         _Console.WriteGreenInfoLine(message);
+      }
+
+      private void ShowResults(string filename, ProcessImageResult processImageResult, string newFullPath)
+      {
          switch (processImageResult)
          {
             case ProcessImageResult.NotSaved:
-               MessageBox.Show($"Unable to save '{filename}' to '{newFullPath}'", "Unable to save", MessageBoxButton.OK, MessageBoxImage.Stop);
+               _Console.WriteRedInfoLine(filename, $"Unable to save to '{newFullPath}'");
                break;
 
             case ProcessImageResult.Saved:
-               MessageBox.Show($"Saved '{filename}' to '{newFullPath}'", "Saved", MessageBoxButton.OK, MessageBoxImage.Information);
+               _Console.WriteGreenInfoLine(filename, $"Saved to '{newFullPath}'");
                break;
 
             case ProcessImageResult.UnableToFindBarCode:
@@ -127,26 +159,12 @@ namespace BarCode
                break;
 
             default:
-               MessageBox.Show($"'{processImageResult}' not supported.", $"Not Supported", MessageBoxButton.OK, MessageBoxImage.Information);
+               _Console.WriteRedInfoLine($"'{processImageResult}' not supported.");
                break;
          }
       }
-      private void ProcessMultipleImages(string[] files)
-      {
-         foreach (var filename in files)
-         {
-            if (!IsFolder(filename))
-            {
-               // only process files - not folders
-               ProcessImage(filename);
-            }
-         }
 
-         var msgBox = MessageBox.Show($"Saved {files.Length} images", "Saved multiple images", MessageBoxButton.OK, MessageBoxImage.Question);
-      }
-
-
-      private void ProcessFolder(string folderName)
+      private async void ProcessFolder(string folderName)
       {
          var allFiles = GetFiles(folderName, Settings.SupportedImageFileTypes);
 
@@ -156,12 +174,25 @@ namespace BarCode
          {
             // need to determine new folder for saving images
 
+            int savedFileCount = 0;
+
+            _Console.WriteInfoLine($"Processing {allFiles.Count} images");
+            TraceBarCode.LogInfo(folderName, $"Processing {allFiles.Count} images");
+
             foreach (var file in allFiles)
             {
-               ProcessImage(file);
+               (ProcessImageResult processImageResult, string newFullPath) = await ProcessImage(file);
+
+               ShowResults(file, processImageResult, newFullPath);
+
+               if (processImageResult == ProcessImageResult.Saved)
+               {
+                  savedFileCount++;
+               }
             }
 
-            MessageBox.Show($"Saved {allFiles.Count} images", $"Saved images", MessageBoxButton.OK, MessageBoxImage.Information);
+            _Console.WriteGreenInfoLine($"Saved {savedFileCount} images out of {allFiles.Count} total images.");
+            TraceBarCode.LogInfo(folderName, $"Saved {savedFileCount} images out of {allFiles.Count} total images.");
          }
       }
 
@@ -195,24 +226,29 @@ namespace BarCode
          UnSupportedFileType
       }
 
-      private (ProcessImageResult processImageResult, string newFullPath) ProcessImage(string filename)
+      private async Task<(ProcessImageResult processImageResult, string newFullPath)> ProcessImage(string filename)
       {
          var extension = Path.GetExtension(filename);
 
          if (Settings.ImageFileTypeIsSupported(extension))
          {
-            _ExistingImageFile = new ImageFile(filename);
-            var barCode = _ExistingImageFile.BarCode;
+            _Console.WriteInfoLine(filename, "Processing");
 
-            if (barCode is null)
+            _ExistingImageFile = new ImageFile(filename);
+            (bool success, string barCode) = await _ExistingImageFile.GetBarCodeAsync();
+
+            if (success == false)
             {
-               MessageBox.Show($"Unable to determine barcode from '{filename}'", $"Unable to get bar code", MessageBoxButton.OK, MessageBoxImage.Error);
+               var message = $"Unable to determine barcode. Bar code read = '{barCode}'";
+               _Console.WriteRedInfoLine(filename, message);
+               TraceBarCode.LogError(filename, message);
+
                return (ProcessImageResult.UnableToFindBarCode, null);
             }
 
-            var product = _CrossReferenceSpreadsheet.FindProduct(Settings.CrossReferenceSpreadsheet, _ExistingImageFile.BarCode);
+            (SpreadsheetResult result, Product product) = _CrossReferenceSpreadsheet.FindProduct(filename, barCode);
 
-            if (product != null)
+            if (result == SpreadsheetResult.Good)
             {
                string newFolder = Path.Combine(Directory.GetParent(filename).Parent.FullName, product.Vendor);
                string newFullPath = Path.Combine(newFolder, $"{product.Vendor}_{product.RegisDescription}{_ExistingImageFile.Extension}");
@@ -233,11 +269,12 @@ namespace BarCode
                   if (imageResult == ImageResult.Saved)
                   {
                      return (ProcessImageResult.Saved, newFullPath);
-                  } 
+                  }
                   else
                   {
                      if (!string.IsNullOrEmpty(exceptionMessage))
                      {
+
                         MessageBox.Show($"Exception occurred when processing '{filename}'. Message: {exceptionMessage}", "Exception", MessageBoxButton.OK, MessageBoxImage.Error);
                      }
 
@@ -254,7 +291,11 @@ namespace BarCode
          }
          else
          {
-            MessageBox.Show($"Image '{filename}' type {extension} is not supported. Only {Settings.SupportedImageFileTypesString} are supported.", "Unsupported image type", MessageBoxButton.OK, MessageBoxImage.Error);
+            var message = $"Image '{filename}' type {extension} is not supported. Only {Settings.SupportedImageFileTypesString} are supported.";
+
+            _Console.WriteRedInfoLine(filename, message);
+            MessageBox.Show(message, "Unsupported image type", MessageBoxButton.OK, MessageBoxImage.Error);
+
             return (ProcessImageResult.UnSupportedFileType, null);
          }
       }
@@ -263,22 +304,20 @@ namespace BarCode
       {
          if (File.Exists(newFilename))
          {
-            var messageBoxResult = MessageBox.Show($"'{newFilename}' already exists. Do you want to delete?", "Already exists.", MessageBoxButton.YesNo, MessageBoxImage.Stop, MessageBoxResult.Yes);
-
-            if (messageBoxResult == MessageBoxResult.Yes)
+            try
             {
-               try
-               {
-                  File.Delete(newFilename);
-                  return true;
-               }
-               catch (Exception ex)
-               {
-                  MessageBox.Show($"'{newFilename}' is not able to be deleted due to '{ex.Message}'.", "Can't be deleted.", MessageBoxButton.OK, MessageBoxImage.Stop);
-                  return false;
-               }
+               File.Delete(newFilename);
+               return true;
             }
-            return false;
+            catch (Exception ex)
+            {
+               var message = $"'{newFilename}' is not able to be deleted due to '{ex.Message}'.";
+
+               _Console.WriteRedInfoLine(newFilename, message);
+               MessageBox.Show(message, "Can't be deleted.", MessageBoxButton.OK, MessageBoxImage.Stop);
+
+               return false;
+            }
          }
          return true;
       }
@@ -300,8 +339,6 @@ namespace BarCode
             Settings.CrossReferenceSpreadsheet = filename;
          }
       }
-
-
 
       public string DropMessage
       {

@@ -13,10 +13,10 @@ namespace BarCode
       // DPI
       public float VerticalPixelsPerInch { get; private set; }
 
-      public ImageSize(float widthInInches, float heightInInches, float horizontalPixelsPerInch, float verticalPixelsPerInch)
+      public ImageSize(float widthInInches, double widthToHeightRatio, float horizontalPixelsPerInch, float verticalPixelsPerInch)
       {
          var widthInPixels = PixelConverter.ConvertInchesToPixels(horizontalPixelsPerInch, widthInInches);
-         var heightInPixels = PixelConverter.ConvertInchesToPixels(verticalPixelsPerInch, heightInInches);
+         var heightInPixels = (int)(widthInPixels / widthToHeightRatio);
 
          HorizontalPixelsPerInch = horizontalPixelsPerInch;
          VerticalPixelsPerInch = verticalPixelsPerInch;
@@ -39,13 +39,23 @@ namespace BarCode
          VerticalPixelsPerInch = verticalPixelsPerInch;
       }
 
+      //public ImageSize(int widthInPixels, float widthToHeightRatio, float horizontalPixelsPerInch, float verticalPixelsPerInch)
+      //{
+      //   var heightInPixels = (int)(widthInPixels / widthToHeightRatio);
+      //   _SizeInPixels = new Size(widthInPixels, heightInPixels);
+
+      //   HorizontalPixelsPerInch = horizontalPixelsPerInch;
+      //   VerticalPixelsPerInch = verticalPixelsPerInch;
+      //}
+
       public int WidthInPixels => _SizeInPixels.Width;
       public int HeightInPixels => _SizeInPixels.Height;
 
-      public float WidthInInches => WidthInPixels / HorizontalPixelsPerInch;
+      public float WidthToHeightRatioFromPixels => (float)WidthInPixels / (float)HeightInPixels;
+      public float WidthInInches => (float)WidthInPixels / HorizontalPixelsPerInch;
       public string WidthInInchesRounded(int numberOfDecimals) => Math.Round(WidthInInches, numberOfDecimals).ToString();
 
-      public float HeightInInches => HeightInPixels / VerticalPixelsPerInch;
+      public float HeightInInches => (float)HeightInPixels / VerticalPixelsPerInch;
       public string HeightInInchesRounded(int numberOfDecimals) => Math.Round(HeightInInches, numberOfDecimals).ToString();
 
       //private float? ConvertPixelsToInches(float inchesPerPixel, string pixels)

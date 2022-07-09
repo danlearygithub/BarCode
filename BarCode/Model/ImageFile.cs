@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Drawing;
 using System.IO;
+using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.Globalization;
@@ -11,37 +13,48 @@ using Windows.Storage.Streams;
 
 namespace BarCode
 {
+
    public class ImageFile : ImageFileBase
    {
-      //public string BarCode { get; private set; }
-
       public ImageFile(string fullPath)
          : base(fullPath)
       {
          Image = Image.FromFile(FullPath);
-         ImageSize = new ImageSize(Image.Width, Image.Height, Image.HorizontalResolution, Image.VerticalResolution);
+         ImageSize = new ImageSize(widthInPixels: Image.Width, heightInPixels: Image.Height, horizontalPixelsPerInch: Image.HorizontalResolution, verticalPixelsPerInch:Image.VerticalResolution);
       }
 
-      public string BarCode
+      public async Task<(bool success, string barCode)> GetBarCodeAsync()
       {
-         get
+         var barCode = await ReadBarCode();
+
+         if (string.IsNullOrEmpty(barCode))
          {
-            var readTask = Task.Factory.StartNew(() => ReadBarCode());
-            readTask.Wait();
+            return (false, barCode);
+         }
 
-            var barCode = readTask.Result.Result;
+         // try to extract starting from whatever that looks like numbers until the end
+         var index = barCode.IndexOfAny("0123456789".ToCharArray());
+         if (index < 0)
+         {
+            return (false, barCode);
+         }
 
-            // need to remove any spaces 
-            var UPCCode = Regex.Replace(barCode, @"\s+", "");
+         string substring = barCode.Substring(index);
 
-            if (Regex.IsMatch(UPCCode, @"^\d+$"))
-            {
-               return UPCCode;
-            }
-            else
-            {
-               return null;
-            }
+         // need to remove any spaces 
+         var UPCCode = Regex.Replace(substring, @"\s+", "");
+
+         // need to remove leading zeros
+         UPCCode = UPCCode.TrimStart('0');
+
+         // only select numbers
+         if (Regex.IsMatch(UPCCode, @"^\d+$"))
+         {
+            return (true, UPCCode);
+         }
+         else
+         {
+            return (false, barCode);
          }
       }
 
@@ -66,6 +79,18 @@ namespace BarCode
          var engine = OcrEngine.TryCreateFromLanguage(language);
 
          var a = await engine.RecognizeAsync(bitmap).AsTask();
+
+         TraceBarCode.LogVerbose($"ReadBarCodeAsync '{FullPath}'", "OcrResult Text={0}, Lines.Count={1}", a.Text, a.Lines.Count);
+
+         for (int i = 0; i < a.Lines.Count; i++)
+         {
+            var line = a.Lines[i];
+
+            var words = string.Join(", ", line.Words.Select(x => x.Text));
+
+            TraceBarCode.LogVerbose($"ReadBarCodeAsync '{FullPath}'", "OcrResult.Line[{0}] Text={1}, Words={2}", i, line.Text, words);
+         }
+
          return a;
       }
 

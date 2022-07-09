@@ -5,8 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BarCode"
         mc:Ignorable="d"
-        Title="Bar Code Image Converter" Height="620" Width="600"
-         x:Name="_Window">
+        Title="Bar Code Image Converter" Height="675" Width="1024"
+        x:Name="_Window">
 
    <Window.Resources>
       <local:AppSettings x:Key="AppSettings" />
@@ -75,17 +75,20 @@
                <TextBox x:Name="NewImageWidthInInches" Style="{StaticResource TextBoxStyle}" Text="{Binding Source={StaticResource AppSettings}, Path=ImageWidthInInches, Mode=TwoWay}"></TextBox>
                <Label Style="{StaticResource LabelStyle}">inches</Label>
             </StackPanel>
-            <Label Style="{StaticResource LabelStyle}" Grid.Row="0" Grid.Column="2">Height</Label>
 
-            <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="3" Style="{StaticResource StackPanelStyle}">
+            <!--<Label Style="{StaticResource LabelStyle}" Grid.Row="0" Grid.Column="2">Height</Label>-->
+
+            <!--<StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="3" Style="{StaticResource StackPanelStyle}">
                <TextBox x:Name="NewImageHeightInInches" Style="{StaticResource TextBoxStyle}" Text="{Binding Source={StaticResource AppSettings}, Path=ImageHeightInInches, Mode=TwoWay}"></TextBox>
                <Label Style="{StaticResource LabelStyle}">inches</Label>
-            </StackPanel>
+            </StackPanel>-->
 
          </Grid>
       </GroupBox>
 
-      <Border Style="{StaticResource BorderStyle}" AllowDrop="True" Drop="Border_Drop"  Height="250" Width="{Binding ActualWidth, ElementName=SpreadsheetGroupBox}">
+      <local:ConsoleUserControl x:Name="_Console" VerticalContentAlignment="Bottom" VerticalAlignment="Top" Height="130"/>
+
+      <Border Style="{StaticResource BorderStyle}" AllowDrop="True" Drop="Border_Drop"  Height="150" Width="{Binding ActualWidth, ElementName=SpreadsheetGroupBox}">
          <TextBlock Style="{StaticResource MessageStyle}" Text="{Binding Path=DropMessage, Mode=OneWay}" d:Text="Drop file, multiple files or folder here." />
       </Border>
 
