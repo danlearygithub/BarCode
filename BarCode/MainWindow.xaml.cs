@@ -282,10 +282,16 @@ namespace BarCode
                   }
                }
 
+               _ExistingImageFile = null;
+               _NewImageFile = null;
+
                return (ProcessImageResult.NotSaved, null);
             }
             else
             {
+               _ExistingImageFile = null;
+               _NewImageFile = null;
+
                return (ProcessImageResult.UnableToFindBarCode, null);
             }
          }
