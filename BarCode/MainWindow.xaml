@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BarCode"
         mc:Ignorable="d"
-        Title="Bar Code Image Converter" Height="675" Width="1024"
+        Title="Bar Code Image Converter" Height="680" Width="1024"
         x:Name="_Window">
 
    <Window.Resources>
@@ -86,11 +86,14 @@
          </Grid>
       </GroupBox>
 
-      <local:ConsoleUserControl x:Name="_Console" VerticalContentAlignment="Bottom" VerticalAlignment="Top" Height="130"/>
+      <local:ConsoleUserControl x:Name="_Console" VerticalContentAlignment="Bottom" VerticalAlignment="Top" Height="180"/>
 
-      <Border Style="{StaticResource BorderStyle}" AllowDrop="True" Drop="Border_Drop"  Height="150" Width="{Binding ActualWidth, ElementName=SpreadsheetGroupBox}">
+      <ProgressBar x:Name="ProgressBar" Style="{StaticResource ProgressBarStyle}"  />
+
+      <Border Style="{StaticResource BorderStyle}" AllowDrop="True" Drop="Border_Drop"  Height="100" Width="{Binding ActualWidth, ElementName=SpreadsheetGroupBox}">
          <TextBlock Style="{StaticResource MessageStyle}" Text="{Binding Path=DropMessage, Mode=OneWay}" d:Text="Drop file, multiple files or folder here." />
       </Border>
+      
 
    </StackPanel>
 </Window>

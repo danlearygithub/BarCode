@@ -32,16 +32,14 @@ namespace BarCode
    public class Product
    {
       public string Vendor { get; private set; }
-      public string Description { get; private set; }
 
       public string RegisDescription { get; private set; }
 
       public string UPC { get; private set; }
 
-      public Product(string vendor, string description, string regisDescription, string upc)
+      public Product(string vendor, string regisDescription, string upc)
       {
          Vendor = vendor;
-         Description = description;
          RegisDescription = regisDescription;
          UPC = upc;
       }
@@ -93,11 +91,6 @@ namespace BarCode
                return;
             }
 
-            if (FindColumn(DescriptionColumnName) is null)
-            {
-               return;
-            }
-
             if (FindColumn(RegisDescriptionColumnName) is null)
             {
                return;
@@ -109,7 +102,6 @@ namespace BarCode
 
       private string UPCColumnName => _AppSettings.UPCColumnName;
       private string VendorColumnName => _AppSettings.VendorColumnName;
-      private string DescriptionColumnName => _AppSettings.DescriptionColumnName;
       private string RegisDescriptionColumnName => _AppSettings.RegisDescriptionColumnName;
 
       public ColumnHeadings ColumnHeadings = new ColumnHeadings();
@@ -157,11 +149,6 @@ namespace BarCode
                return SpreadsheetFormatResult.VendorColumnMissing;
             }
 
-            if (FindColumn(DescriptionColumnName) is null)
-            {
-               return SpreadsheetFormatResult.DescriptionColumnMissing;
-            }
-
             if (FindColumn(RegisDescriptionColumnName) is null)
             {
                return SpreadsheetFormatResult.RegisDescriptionColumnMissing;
@@ -205,31 +192,39 @@ namespace BarCode
          if (UPCRowNumber.HasValue)
          {
             var vendor = FindCell(fullPath, UPC, UPCRowNumber.Value, VendorColumnName);
-            var description = FindCell(fullPath, UPC, UPCRowNumber.Value, DescriptionColumnName);
             var regisDescription = FindCell(fullPath, UPC, UPCRowNumber.Value, RegisDescriptionColumnName);
 
-            if (!string.IsNullOrEmpty(vendor) && !string.IsNullOrEmpty(description) && !string.IsNullOrEmpty(regisDescription))
+            if (string.IsNullOrEmpty(vendor))
             {
-               product = new Product(vendor, description, regisDescription, UPC);
-
-               return (SpreadsheetResult.Good, product);
-            }
-            else
-            {
-               var message = $"Can't get product information for '{UPC}'";
+               var message = $"Can't get vendor for '{UPC}'";
 
                _Console.WriteRedInfoLine(fullPath, message);
                TraceBarCode.LogError(fullPath, message);
 
-               return (SpreadsheetResult.UnableToFindProduct, null); 
+               return (SpreadsheetResult.UnableToFindProduct, null);
             }
+
+            if (string.IsNullOrEmpty(regisDescription))
+            {
+               var message = $"Can't get regis description for '{UPC}'";
+
+               _Console.WriteRedInfoLine(fullPath, message);
+               TraceBarCode.LogError(fullPath, message);
+
+               return (SpreadsheetResult.UnableToFindProduct, null);
+            }
+
+            product = new Product(vendor, regisDescription, UPC);
+
+            return (SpreadsheetResult.Good, product);
+
          }
          else
          {
             return (SpreadsheetResult.UnableToFindUPC, product);
          }
 
-        
+
       }
 
       private int? FindUPCRowNumber(string fullPath, string UPC)

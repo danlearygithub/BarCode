@@ -49,6 +49,7 @@ namespace BarCode
 
       private void OnMainWindowLoaded(object sender, RoutedEventArgs e)
       {
+         ProgressBar.Visibility = Visibility.Hidden;
       }
 
       private async void Border_Drop(object sender, DragEventArgs e)
@@ -114,15 +115,21 @@ namespace BarCode
 
       private async Task ProcessMultipleImages(string[] files)
       {
+         ProgressBar.Visibility = Visibility.Visible;
+
          _Console.WriteInfoLine($"Processing {files.Length} images");
          TraceBarCode.LogInfo("ProcessMultipleImages", $"Processing {files.Length} images");
 
          int savedFileCount = 0;
 
+         ProgressBar.Maximum = files.Length;
+
          foreach (var filename in files)
          {
             if (!IsFolder(filename))
             {
+               ProgressBar.Value++;
+
                // only process files - not folders
                (ProcessImageResult processImageResult, string newFullPath) = await ProcessImage(filename);
 
@@ -135,8 +142,74 @@ namespace BarCode
             }
          }
 
-         var message = $"Saved {savedFileCount} images out of {files.Length} total images.";
-         _Console.WriteGreenInfoLine(message);
+         if (savedFileCount != files.Length)
+         {
+            var message = $"Saved {savedFileCount} images out of {files.Length} total images. Missed {files.Length - savedFileCount}";
+            _Console.WriteRedInfoLine(message);
+            TraceBarCode.LogError("ProcessMultipleImages", message);
+         }
+         else
+         {
+            var message = $"Saved {savedFileCount} images out of {files.Length} total images.";
+            _Console.WriteGreenInfoLine(message);
+            TraceBarCode.LogInfo("ProcessMultipleImages", message);
+
+         }
+
+         ProgressBar.Visibility = Visibility.Hidden;
+      }
+
+     
+
+      private async void ProcessFolder(string folderName)
+      {
+         var allFiles = GetFiles(folderName, Settings.SupportedImageFileTypes);
+
+         var msgBox = MessageBox.Show($"Do you want to process {allFiles.Count} images in '{folderName}' folder?", $"Processing '{folderName}' folder", MessageBoxButton.OKCancel, MessageBoxImage.Question);
+
+         if (msgBox == MessageBoxResult.OK)
+         {
+            ProgressBar.Visibility = Visibility.Visible;
+
+            // need to determine new folder for saving images
+
+            int savedFileCount = 0;
+
+            _Console.WriteInfoLine($"Processing {allFiles.Count} images");
+            TraceBarCode.LogInfo(folderName, $"Processing {allFiles.Count} images");
+
+            ProgressBar.Maximum = allFiles.Count;
+
+            foreach (var file in allFiles)
+            {
+               ProgressBar.Value++;
+
+               (ProcessImageResult processImageResult, string newFullPath) = await ProcessImage(file);
+
+               ShowResults(file, processImageResult, newFullPath);
+
+               if (processImageResult == ProcessImageResult.Saved)
+               {
+                  savedFileCount++;
+               }
+            }
+
+            if (savedFileCount != allFiles.Count)
+            {
+               var message = $"Saved {savedFileCount} images out of {allFiles.Count} total images.";
+               _Console.WriteRedInfoLine(message);
+               TraceBarCode.LogError(folderName, message);
+            }
+            else
+            {
+               var message = $"Saved {savedFileCount} images out of {allFiles.Count} total images. Missed {allFiles.Count - savedFileCount}";
+               _Console.WriteGreenInfoLine(message);
+               TraceBarCode.LogInfo(folderName, message);
+
+            }
+         }
+
+         ProgressBar.Visibility = Visibility.Hidden;
       }
 
       private void ShowResults(string filename, ProcessImageResult processImageResult, string newFullPath)
@@ -163,40 +236,6 @@ namespace BarCode
                break;
          }
       }
-
-      private async void ProcessFolder(string folderName)
-      {
-         var allFiles = GetFiles(folderName, Settings.SupportedImageFileTypes);
-
-         var msgBox = MessageBox.Show($"Do you want to process {allFiles.Count} images in '{folderName}' folder?", $"Processing '{folderName}' folder", MessageBoxButton.OKCancel, MessageBoxImage.Question);
-
-         if (msgBox == MessageBoxResult.OK)
-         {
-            // need to determine new folder for saving images
-
-            int savedFileCount = 0;
-
-            _Console.WriteInfoLine($"Processing {allFiles.Count} images");
-            TraceBarCode.LogInfo(folderName, $"Processing {allFiles.Count} images");
-
-            foreach (var file in allFiles)
-            {
-               (ProcessImageResult processImageResult, string newFullPath) = await ProcessImage(file);
-
-               ShowResults(file, processImageResult, newFullPath);
-
-               if (processImageResult == ProcessImageResult.Saved)
-               {
-                  savedFileCount++;
-               }
-            }
-
-            _Console.WriteGreenInfoLine($"Saved {savedFileCount} images out of {allFiles.Count} total images.");
-            TraceBarCode.LogInfo(folderName, $"Saved {savedFileCount} images out of {allFiles.Count} total images.");
-         }
-      }
-
-
       public IList<string> GetFiles(string folderName, IList<string> searchPatterns)
       {
          List<string> files = new List<string>();
