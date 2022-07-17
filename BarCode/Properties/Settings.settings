@@ -8,12 +8,6 @@
     <Setting Name="ImageWidthInInches" Type="System.Single" Scope="User">
       <Value Profile="(Default)">1.25</Value>
     </Setting>
-    <Setting Name="ImageHeightInInches" Type="System.Single" Scope="User">
-      <Value Profile="(Default)">0.94</Value>
-    </Setting>
-    <Setting Name="InchesPerPixel" Type="System.Single" Scope="User">
-      <Value Profile="(Default)">0.010417</Value>
-    </Setting>
     <Setting Name="SupportedImageFileTypes" Type="System.Collections.Specialized.StringCollection" Scope="User">
       <Value Profile="(Default)" />
     </Setting>

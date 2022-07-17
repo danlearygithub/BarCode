@@ -19,7 +19,7 @@ namespace BarCode
       private const int COMMENT_HEIGHT = 80;
       private const int EXTRA_WIDTH = 50;
 
-      public NewImageFile(string fullPath, ImageFile existingImageFile, AppSettings settings, Product product)
+      public NewImageFile(string fullPath, ImageFile existingImageFile, AppSettings settings, Product product = null)
          : base(fullPath)
       {
          _ExistingImageFile = existingImageFile;
@@ -81,11 +81,23 @@ namespace BarCode
 
                   var gapBetweenLines = 0;
 
-                  var rect = AddText(graphics, _Product.Vendor, width: fullWidthInPixels, y: 5, emSize: 10);
-                  
-                  rect = AddText(graphics, _Product.RegisDescription, width: fullWidthInPixels, y: rect.Top + rect.Height + gapBetweenLines, emSize: 8);
+                  if (_Product != null)
+                  {
+                     var rect = AddText(graphics, _Product.Vendor, width: fullWidthInPixels, y: 5, emSize: VENDOR_FONT_SIZE);
 
-                  AddText(graphics, _ExistingImageFile.FullPath, width: fullWidthInPixels, y: rect.Top + rect.Height + gapBetweenLines, emSize: 3);
+                     rect = AddText(graphics, _Product.RegisDescription, width: fullWidthInPixels, y: rect.Top + rect.Height + gapBetweenLines, emSize: REGIS_DESCRIPTION_FONT_SIZE);
+
+                     AddText(graphics, _ExistingImageFile.FullPath, width: fullWidthInPixels, y: rect.Top + rect.Height + gapBetweenLines, emSize: IMAGE_FULLPATH_FONT_SIZE);
+                  }
+                  else
+                  {
+                     // measure if vendor and regis description is exists
+                     var rect = MeasureText(graphics, "X", width: fullWidthInPixels, y:5, font: new Font(TEXT_FONT_FAMILY, VENDOR_FONT_SIZE));
+                   
+                     rect = MeasureText(graphics, "X", width: fullWidthInPixels, y: rect.Top + rect.Height + gapBetweenLines, font: new Font(TEXT_FONT_FAMILY, REGIS_DESCRIPTION_FONT_SIZE));
+
+                     AddText(graphics, _ExistingImageFile.FullPath, width: fullWidthInPixels, y: rect.Top + rect.Height + gapBetweenLines, emSize: IMAGE_FULLPATH_FONT_SIZE);
+                  }
                }
 
                newImage.Save(FullPath);
@@ -99,14 +111,16 @@ namespace BarCode
          }
       }
 
+      private const float VENDOR_FONT_SIZE = 10;
+      private const float REGIS_DESCRIPTION_FONT_SIZE = 8;
+      private const float IMAGE_FULLPATH_FONT_SIZE = 3;
+      private FontFamily TEXT_FONT_FAMILY = FontFamily.GenericSerif;
+
       private Rectangle AddText(Graphics graphics, string text, int width, int y, float emSize)
       {
          // add comment
-         var font = new Font(FontFamily.GenericSerif, emSize);
-
-         var textSize = graphics.MeasureString(text, font);
-
-         var stringRect = new Rectangle(0, y, width, (int)textSize.Height);
+         var font = new Font(TEXT_FONT_FAMILY, emSize);
+         var stringRect = MeasureText(graphics, text, width, y, font);
 
          var stringFormat = new StringFormat();
          stringFormat.Alignment = StringAlignment.Center;
@@ -119,5 +133,12 @@ namespace BarCode
          return stringRect;
       }
 
+      private Rectangle MeasureText(Graphics graphics, string text, int width, int y, Font font)
+      {
+         
+         var textSize = graphics.MeasureString(text, font);
+
+         return new Rectangle(0, y, width, (int)textSize.Height);
+      }
    }
 }

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BarCode"
         mc:Ignorable="d"
-        Title="Bar Code Image Converter" Height="680" Width="1024"
+        Title="Bar Code Image Converter" Height="680" Width="1000"
         x:Name="_Window">
 
    <Window.Resources>
@@ -60,40 +60,35 @@
 
          <Grid>
             <Grid.RowDefinitions>
-               <RowDefinition Height="*"/>
+               <RowDefinition Height="*" />
+               <RowDefinition Height="*" />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-               <ColumnDefinition Width="136" />
-               <ColumnDefinition Width="136" />
-               <ColumnDefinition Width="115" />
+               <ColumnDefinition Width="*" />
+               <ColumnDefinition Width="*" />
                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <Label Style="{StaticResource LabelStyle}" Grid.Row="0" Grid.Column="0">Width</Label>
-
-            <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="1" Style="{StaticResource StackPanelStyle}">
+            <StackPanel Orientation="Horizontal" Grid.Row="0" Style="{StaticResource StackPanelStyle}" >
+               <Label Style="{StaticResource LabelStyle}">Width</Label>
                <TextBox x:Name="NewImageWidthInInches" Style="{StaticResource TextBoxStyle}" Text="{Binding Source={StaticResource AppSettings}, Path=ImageWidthInInches, Mode=TwoWay}"></TextBox>
                <Label Style="{StaticResource LabelStyle}">inches</Label>
             </StackPanel>
 
-            <!--<Label Style="{StaticResource LabelStyle}" Grid.Row="0" Grid.Column="2">Height</Label>-->
+            <CheckBox x:Name="AutoClearLog" Grid.Column="1" Style="{StaticResource CheckBoxStyle}" HorizontalContentAlignment="Left">Auto Clear Log</CheckBox>
+            <Button x:Name="ClearLog" Grid.Column="2" Style="{StaticResource ButtonStyle}" Click="ClearLog_Click">Clear Log</Button>
 
-            <!--<StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="3" Style="{StaticResource StackPanelStyle}">
-               <TextBox x:Name="NewImageHeightInInches" Style="{StaticResource TextBoxStyle}" Text="{Binding Source={StaticResource AppSettings}, Path=ImageHeightInInches, Mode=TwoWay}"></TextBox>
-               <Label Style="{StaticResource LabelStyle}">inches</Label>
-            </StackPanel>-->
-
+            <local:ConsoleUserControl x:Name="_Console" Grid.Row="1" Grid.ColumnSpan="3" VerticalContentAlignment="Bottom" VerticalAlignment="Top" Height="180" Width="1000"/>
          </Grid>
-      </GroupBox>
 
-      <local:ConsoleUserControl x:Name="_Console" VerticalContentAlignment="Bottom" VerticalAlignment="Top" Height="180"/>
+      </GroupBox>
 
       <ProgressBar x:Name="ProgressBar" Style="{StaticResource ProgressBarStyle}"  />
 
       <Border Style="{StaticResource BorderStyle}" AllowDrop="True" Drop="Border_Drop"  Height="100" Width="{Binding ActualWidth, ElementName=SpreadsheetGroupBox}">
          <TextBlock Style="{StaticResource MessageStyle}" Text="{Binding Path=DropMessage, Mode=OneWay}" d:Text="Drop file, multiple files or folder here." />
       </Border>
-      
+
 
    </StackPanel>
 </Window>

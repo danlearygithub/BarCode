@@ -122,32 +122,6 @@ namespace BarCode
          }
       }
 
-      public float ImageHeightInInches
-      {
-         get
-         {
-            return ReadSettings("ImageHeightInInches", (float)0.94);
-         }
-         set
-         {
-            SaveSettings("ImageHeightInInches", value);
-            NotifyPropertyChanged();
-         }
-      }
-
-      public float InchesPerPixel
-      {
-         get
-         {
-            return ReadSettings("InchesPerPixel", (float)0.010417);
-         }
-         set
-         {
-            SaveSettings("InchesPerPixel", value);
-            NotifyPropertyChanged();
-         }
-      }
-
       public List<string> SupportedImageFileTypes
       {
          get

@@ -12,6 +12,9 @@ namespace BarCode
 
       public string FullPath { get; private set; }
 
+      /// <summary>
+      /// Returns the filename and extension
+      /// </summary>
       public string FileName => Path.GetFileName(FullPath);
       public string FileNameWithoutExtension => Path.GetFileNameWithoutExtension(FullPath);
       public string DirectoryName => Path.GetDirectoryName(FullPath);

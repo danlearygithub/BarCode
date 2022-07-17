@@ -244,7 +244,7 @@ namespace BarCode
          {
             var message = $"Did not find '{UPC}' UPC code in '{_AppSettings.UPCColumnName}' column";
 
-            _Console.WriteRedInfoLine(fullPath, message);
+            //_Console.WriteRedInfoLine(fullPath, message);
             TraceBarCode.LogError(fullPath, message);
 
             return null;

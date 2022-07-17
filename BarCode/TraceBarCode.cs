@@ -11,7 +11,7 @@ namespace BarCode
    {
       public const int TraceId = 1;
 
-      private static TraceSource _TraceSource = new TraceSource("BarCode");
+      public static TraceSource TraceSource = new TraceSource("BarCode");
 
       public static bool LogInfoEnable()
       {
@@ -32,7 +32,7 @@ namespace BarCode
 
       public static SourceLevels SourceLevel
       {
-         get { return _TraceSource.Switch.Level; }
+         get { return TraceSource.Switch.Level; }
       }
 
       [Conditional("TRACE_VERBOSE")]
@@ -40,7 +40,7 @@ namespace BarCode
       {
          if (LogVerboseEnable())
          {
-            _TraceSource.TraceData(TraceEventType.Verbose, TraceId, source, (data.Length == 0) ? message : string.Format(message, data));
+            TraceSource.TraceData(TraceEventType.Verbose, TraceId, source, (data.Length == 0) ? message : string.Format(message, data));
          }
       }
 
@@ -49,20 +49,20 @@ namespace BarCode
       {
          if (LogInfoEnable())
          {
-            _TraceSource.TraceData(TraceEventType.Information, TraceId, source, (data.Length == 0) ? message : string.Format(message, data));
+            TraceSource.TraceData(TraceEventType.Information, TraceId, source, (data.Length == 0) ? message : string.Format(message, data));
          }
       }
 
       [Conditional("TRACE")]
       public static void LogWarning(string source, string message, params object[] data)
       {
-         _TraceSource.TraceData(TraceEventType.Warning, TraceId, source, (data.Length == 0) ? message : string.Format(message, data));
+         TraceSource.TraceData(TraceEventType.Warning, TraceId, source, (data.Length == 0) ? message : string.Format(message, data));
       }
 
       [Conditional("TRACE")]
       public static void LogError(string source, string message, params object[] data)
       {
-         _TraceSource.TraceData(TraceEventType.Error, TraceId, source, (data.Length == 0) ? message : string.Format(message, data));
+         TraceSource.TraceData(TraceEventType.Error, TraceId, source, (data.Length == 0) ? message : string.Format(message, data));
       }
    }
 }

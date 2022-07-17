@@ -75,6 +75,19 @@
             <Setter Property="VerticalContentAlignment" Value="Center" />
          </Style>
 
+         <Style x:Key="CheckBoxStyle" TargetType="CheckBox">
+            <Setter Property="Margin" Value="2" />
+            <Setter Property="Padding" Value="2" />
+
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Width" Value="150" />
+
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+         </Style>
+
          <Style x:Key="StackPanelStyle" TargetType="StackPanel">
             <Setter Property="Margin" Value="2" />
          </Style>

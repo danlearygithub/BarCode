@@ -5,6 +5,8 @@ VisualStudioVersion = 17.2.32616.157
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BarCode", "BarCode\BarCode.csproj", "{55843A69-7537-4D82-A6E3-3A60C138ADA1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BarCodeTest", "BarCodeTest\BarCodeTest.csproj", "{EB0DC323-DDD2-4304-A229-F6F0DC419DE7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,6 +40,26 @@ Global
 		{55843A69-7537-4D82-A6E3-3A60C138ADA1}.Release|x64.Build.0 = Release|Any CPU
 		{55843A69-7537-4D82-A6E3-3A60C138ADA1}.Release|x86.ActiveCfg = Release|Any CPU
 		{55843A69-7537-4D82-A6E3-3A60C138ADA1}.Release|x86.Build.0 = Release|Any CPU
+		{EB0DC323-DDD2-4304-A229-F6F0DC419DE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB0DC323-DDD2-4304-A229-F6F0DC419DE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB0DC323-DDD2-4304-A229-F6F0DC419DE7}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{EB0DC323-DDD2-4304-A229-F6F0DC419DE7}.Debug|ARM.Build.0 = Debug|Any CPU
+		{EB0DC323-DDD2-4304-A229-F6F0DC419DE7}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{EB0DC323-DDD2-4304-A229-F6F0DC419DE7}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{EB0DC323-DDD2-4304-A229-F6F0DC419DE7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{EB0DC323-DDD2-4304-A229-F6F0DC419DE7}.Debug|x64.Build.0 = Debug|Any CPU
+		{EB0DC323-DDD2-4304-A229-F6F0DC419DE7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{EB0DC323-DDD2-4304-A229-F6F0DC419DE7}.Debug|x86.Build.0 = Debug|Any CPU
+		{EB0DC323-DDD2-4304-A229-F6F0DC419DE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB0DC323-DDD2-4304-A229-F6F0DC419DE7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB0DC323-DDD2-4304-A229-F6F0DC419DE7}.Release|ARM.ActiveCfg = Release|Any CPU
+		{EB0DC323-DDD2-4304-A229-F6F0DC419DE7}.Release|ARM.Build.0 = Release|Any CPU
+		{EB0DC323-DDD2-4304-A229-F6F0DC419DE7}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{EB0DC323-DDD2-4304-A229-F6F0DC419DE7}.Release|ARM64.Build.0 = Release|Any CPU
+		{EB0DC323-DDD2-4304-A229-F6F0DC419DE7}.Release|x64.ActiveCfg = Release|Any CPU
+		{EB0DC323-DDD2-4304-A229-F6F0DC419DE7}.Release|x64.Build.0 = Release|Any CPU
+		{EB0DC323-DDD2-4304-A229-F6F0DC419DE7}.Release|x86.ActiveCfg = Release|Any CPU
+		{EB0DC323-DDD2-4304-A229-F6F0DC419DE7}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

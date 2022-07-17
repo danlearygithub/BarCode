@@ -49,30 +49,6 @@ namespace BarCode.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0.94")]
-        public float ImageHeightInInches {
-            get {
-                return ((float)(this["ImageHeightInInches"]));
-            }
-            set {
-                this["ImageHeightInInches"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0.010417")]
-        public float InchesPerPixel {
-            get {
-                return ((float)(this["InchesPerPixel"]));
-            }
-            set {
-                this["InchesPerPixel"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         public global::System.Collections.Specialized.StringCollection SupportedImageFileTypes {
             get {
                 return ((global::System.Collections.Specialized.StringCollection)(this["SupportedImageFileTypes"]));
