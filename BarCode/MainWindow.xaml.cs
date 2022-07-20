@@ -6,6 +6,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Linq;
+using System.Reflection;
 
 namespace BarCode
 {
@@ -51,6 +52,9 @@ namespace BarCode
       private void OnMainWindowLoaded(object sender, RoutedEventArgs e)
       {
          ProgressBar.Visibility = Visibility.Hidden;
+
+         var version = Assembly.GetExecutingAssembly().GetName().Version;
+         _Window.Title = $"Bar Code Image Converter Version:{version.Major}.{version.Minor}";
       }
 
       private async void Border_Drop(object sender, DragEventArgs e)
