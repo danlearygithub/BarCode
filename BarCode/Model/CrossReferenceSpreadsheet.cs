@@ -10,9 +10,10 @@ using Excel = Microsoft.Office.Interop.Excel;
 
 namespace BarCode
 {
-   public enum SpreadsheetFormatResult
+   public enum SpreadsheetStatus
    {
       Good,
+      WorkbookMissing,
       TooManyWorksheets,
       UPCColumnMissing,
       VendorColumnMissing,
@@ -57,13 +58,25 @@ namespace BarCode
 
       public CrossReferenceSpreadsheet(AppSettings appSettings, IConsole console)
       {
-         _FullPath = appSettings.CrossReferenceSpreadsheet;
-         _AppSettings = appSettings;
          _Console = console;
 
          _App = new Excel.Application();
          _App.DisplayAlerts = false;
          _App.Visible = false;
+
+         Initialize(appSettings);
+      }
+
+      public SpreadsheetStatus Initialize(AppSettings appSettings)
+      {
+         _FullPath = appSettings.CrossReferenceSpreadsheet;
+         _AppSettings = appSettings;
+
+         if (!File.Exists(_FullPath))
+         {
+            _Console.WriteRedInfoLine($"Can't locate {_FullPath}");
+            return SpreadsheetStatus.WorkbookMissing;
+         }
 
          _Workbook = _App.Workbooks.Open(Filename: _FullPath, ReadOnly: true);
 
@@ -71,6 +84,7 @@ namespace BarCode
          {
             // too many worksheets
             MessageBox.Show($"There are {_Workbook.Worksheets.Count} worksheets. Can't continue. There should be only 1.", "Too many worksheets", MessageBoxButton.OK, MessageBoxImage.Error);
+            return SpreadsheetStatus.TooManyWorksheets;
          }
          else
          {
@@ -78,27 +92,26 @@ namespace BarCode
 
             GetAllColumnNames();
 
-            var correctFormat = IsInCorrectFormat;
             _UPCColumn = FindColumn(UPCColumnName);
 
             if (_UPCColumn is null)
             {
-               return;
+               return SpreadsheetStatus.UPCColumnMissing;
             }
 
             if (FindColumn(VendorColumnName) is null)
             {
-               return;
+               return SpreadsheetStatus.VendorColumnMissing;
             }
 
             if (FindColumn(RegisDescriptionColumnName) is null)
             {
-               return;
+               return SpreadsheetStatus.RegisDescriptionColumnMissing;
             }
 
+            return SpreadsheetStatus.Good;
          }
       }
-
 
       private string UPCColumnName => _AppSettings.UPCColumnName;
       private string VendorColumnName => _AppSettings.VendorColumnName;
@@ -126,13 +139,18 @@ namespace BarCode
          }
       }
 
-      public SpreadsheetFormatResult IsInCorrectFormat
+      public SpreadsheetStatus SpreadsheetStatus
       {
          get
          {
+            if (!File.Exists(_FullPath))
+            {
+               return SpreadsheetStatus.WorkbookMissing;
+            }
+
             if (_Workbook.Worksheets.Count > 1)
             {
-               return SpreadsheetFormatResult.TooManyWorksheets;
+               return SpreadsheetStatus.TooManyWorksheets;
             }
 
             GetAllColumnNames();
@@ -141,20 +159,20 @@ namespace BarCode
 
             if (_UPCColumn is null)
             {
-               return SpreadsheetFormatResult.UPCColumnMissing;
+               return SpreadsheetStatus.UPCColumnMissing;
             }
 
             if (FindColumn(VendorColumnName) is null)
             {
-               return SpreadsheetFormatResult.VendorColumnMissing;
+               return SpreadsheetStatus.VendorColumnMissing;
             }
 
             if (FindColumn(RegisDescriptionColumnName) is null)
             {
-               return SpreadsheetFormatResult.RegisDescriptionColumnMissing;
+               return SpreadsheetStatus.RegisDescriptionColumnMissing;
             }
 
-            return SpreadsheetFormatResult.Good;
+            return SpreadsheetStatus.Good;
          }
       }
 
@@ -175,7 +193,7 @@ namespace BarCode
 
       public (SpreadsheetResult result, Product product) FindProduct(string fullPath, string UPC)
       {
-         if (IsInCorrectFormat != SpreadsheetFormatResult.Good)
+         if (SpreadsheetStatus != SpreadsheetStatus.Good)
          {
             return (SpreadsheetResult.InvalidSpreadsheet, null);
          }
@@ -283,7 +301,11 @@ namespace BarCode
 
       public void Close()
       {
-         _Workbook.Close(false, null, null);
+         if (_Workbook != null)
+         {
+            _Workbook.Close(false, null, null);
+         }
+
          _App.Quit();
 
          Marshal.ReleaseComObject(_App);

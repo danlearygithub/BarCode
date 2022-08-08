@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Linq;
 using System.Reflection;
+using System.Windows.Controls;
 
 namespace BarCode
 {
@@ -59,7 +60,7 @@ namespace BarCode
 
       private async void Border_Drop(object sender, DragEventArgs e)
       {
-         if (_CrossReferenceSpreadsheet.IsInCorrectFormat != SpreadsheetFormatResult.Good)
+         if (_CrossReferenceSpreadsheet.SpreadsheetStatus != SpreadsheetStatus.Good)
          {
             return;
          }
@@ -134,7 +135,9 @@ namespace BarCode
 
          ProgressBar.Maximum = files.Length;
 
-         foreach (var filename in files)
+         var sortedFiles = files.OrderBy(s => s);
+
+         foreach (var filename in sortedFiles)
          {
             if (!IsFolder(filename))
             {
@@ -154,13 +157,13 @@ namespace BarCode
 
          if (savedFileCount != files.Length)
          {
-            var message = $"Saved {savedFileCount} images out of {files.Length} total images. {files.Length - savedFileCount} not saved.";
+            var message = $"Saved {savedFileCount} images of {files.Length} total images. {files.Length - savedFileCount} not saved.";
             _Console.WriteRedInfoLine(message);
             TraceBarCode.LogError("ProcessMultipleImages", message);
          }
          else
          {
-            var message = $"Saved {savedFileCount} images out of {files.Length} total images.";
+            var message = $"Saved {savedFileCount} images of {files.Length} total images.";
             _Console.WriteGreenInfoLine(message);
             TraceBarCode.LogInfo("ProcessMultipleImages", message);
 
@@ -188,7 +191,9 @@ namespace BarCode
 
             ProgressBar.Maximum = allFiles.Count;
 
-            foreach (var file in allFiles)
+            var sortedFiles = allFiles.OrderBy(s => s);
+
+            foreach (var file in sortedFiles)
             {
                ProgressBar.Value++;
 
@@ -204,13 +209,13 @@ namespace BarCode
 
             if (savedFileCount != allFiles.Count)
             {
-               var message = $"Saved {savedFileCount} images out of {allFiles.Count} total images.";
+               var message = $"Saved {savedFileCount} images of {allFiles.Count} total images.";
                _Console.WriteRedInfoLine(message);
                TraceBarCode.LogError(folderName, message);
             }
             else
             {
-               var message = $"Saved {savedFileCount} images out of {allFiles.Count} total images. Missed {allFiles.Count - savedFileCount}";
+               var message = $"Saved {savedFileCount} images of {allFiles.Count} total images. Missed {allFiles.Count - savedFileCount}";
                _Console.WriteGreenInfoLine(message);
                TraceBarCode.LogInfo(folderName, message);
 
@@ -237,7 +242,7 @@ namespace BarCode
                break;
 
             case ProcessImageResult.UnableToFindBarCode:
-              //_Console.WriteRedInfoLine($"Unable to find bar code from '{newFullPath}'");
+               //_Console.WriteRedInfoLine($"Unable to find bar code from '{newFullPath}'");
                break;
             case ProcessImageResult.UnSupportedFileType:
                // do nothing - popup already happened
@@ -282,6 +287,9 @@ namespace BarCode
       {
          ProcessImageResult processImageResult;
          string newFullPath;
+         SpreadsheetResult result;
+         Product product;
+         string barCode;
 
          var extension = Path.GetExtension(filename);
 
@@ -291,59 +299,75 @@ namespace BarCode
 
             _ExistingImageFile = new ImageFile(filename);
 
-            //(bool success, string barCode) = _ExistingImageFile.GetBarCode();
-            (bool success, string rawBarCode, List<string> barCodes) = await _ExistingImageFile.GetBarCodeAsync();
+            //(bool success, string rawBarCode, List<string> barCodes) = _ExistingImageFile.GetBarCodeUsingIronOcr();
+            (bool success, string rawBarCode, string modifiedBarCode, List<string> barCodes) = await _ExistingImageFile.GetBarCodeAsync();
 
-            if (success == false)
+            if (success == true)
+            {
+               barCode = modifiedBarCode;
+            }
+            else
             {
                var m = $"Unable to determine barcode. Bar code read = '{rawBarCode}'";
 
                _Console.WriteRedInfoLine(filename, m);
                TraceBarCode.LogError(filename, m);
 
-               (processImageResult, newFullPath) = ProcessUnknownBarCode(filename);
+               var dialog = new BarCodeWindow();
+               dialog.Owner = this;
 
-               _Console.WriteGreenInfoLine($"Saved to '{newFullPath}'.");
+               dialog.Image = filename;
 
-               return (ProcessImageResult.UnableToDetermineBarCode, newFullPath, null);
-            }
+               bool? dialogResult = dialog.ShowDialog();
 
-            var newBarCodes = barCodes.ToList();
-
-            // add one more with numbers on front and end and both
-            foreach (var barCode in barCodes)
-            {
-               for (int i = 0; i < 10; i++)
+               if (dialogResult == true)
                {
-                  var front = i + 1;
+                  barCode = dialog.BarCode;
+               }
+               else
+               {
+                  (processImageResult, newFullPath) = ProcessUnknownBarCode(filename);
 
-                  newBarCodes.Add(front + barCode);
-                  newBarCodes.Add(barCode + i);
-                  newBarCodes.Add(front + barCode + i);
+                  _Console.WriteGreenInfoLine($"Saved to '{newFullPath}'.");
+
+                  return (ProcessImageResult.UnableToDetermineBarCode, newFullPath, null);
                }
             }
 
-           
+            //var newBarCodes = barCodes.ToList();
 
-            foreach (var barCode in newBarCodes)
+            //// add one more with numbers on front and end and both
+            //foreach (var barCode in barCodes)
+            //{
+            //   for (int i = 0; i < 10; i++)
+            //   {
+            //      var front = i + 1;
+
+            //      newBarCodes.Add(front + barCode);
+            //      newBarCodes.Add(barCode + i);
+            //      newBarCodes.Add(front + barCode + i);
+            //   }
+            //}
+
+            //foreach (var barCode in newBarCodes)
+            //{
+            //var tryMessage = $"Trying to find '{barCode}'";
+
+            //_Console.WriteAttemptLine(tryMessage);
+            //TraceBarCode.LogVerbose(filename, tryMessage);
+
+            (result, product) = _CrossReferenceSpreadsheet.FindProduct(filename, barCode);
+
+            if (result == SpreadsheetResult.Good)
             {
-               var tryMessage = $"Trying to find '{barCode}'";
+               (processImageResult, newFullPath) = ProcessBarCode(filename, product);
 
-               _Console.WriteAttemptLine(tryMessage);
-               TraceBarCode.LogVerbose(filename, tryMessage);
+               _ExistingImageFile = null;
+               _NewImageFile = null;
 
-               (SpreadsheetResult result, Product product) = _CrossReferenceSpreadsheet.FindProduct(filename, barCode);
-
-               if (result == SpreadsheetResult.Good)
-               {
-                  (processImageResult, newFullPath) = ProcessBarCode(filename, product);
-
-                  _ExistingImageFile = null;
-                  _NewImageFile = null;
-
-                  return (processImageResult, newFullPath, product);
-               }
+               return (processImageResult, newFullPath, product);
             }
+            //}
 
             var message = $"Unable to determine barcode. Bar code read = '{rawBarCode}'";
             _Console.WriteRedInfoLine(filename, message);
@@ -458,6 +482,10 @@ namespace BarCode
 
             CrossReferenceFileName.Text = filename;
             Settings.CrossReferenceSpreadsheet = filename;
+
+            _CrossReferenceSpreadsheet.Initialize(Settings);
+
+            DropMessageTextBlock.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
          }
       }
 
@@ -475,22 +503,24 @@ namespace BarCode
                return "_CrossReferenceSpreadsheet error";
             }
 
-
-            switch (_CrossReferenceSpreadsheet.IsInCorrectFormat)
+            switch (_CrossReferenceSpreadsheet.SpreadsheetStatus)
             {
-               case SpreadsheetFormatResult.TooManyWorksheets:
+               case SpreadsheetStatus.WorkbookMissing:
+                  return $"Worksheet '{Settings.CrossReferenceSpreadsheet}' is missing.";
+
+               case SpreadsheetStatus.TooManyWorksheets:
                   return "There are too many worksheets in cross reference spreadsheet. There should be only 1.";
 
-               case SpreadsheetFormatResult.UPCColumnMissing:
+               case SpreadsheetStatus.UPCColumnMissing:
                   return $"UPC column is missing from cross reference spreadsheet. Check column name.\n Existing Headings = {_CrossReferenceSpreadsheet.ColumnHeadings.ToString()}";
 
-               case SpreadsheetFormatResult.VendorColumnMissing:
+               case SpreadsheetStatus.VendorColumnMissing:
                   return $"Vendor column is missing from cross reference spreadsheet. Check column name.\n Existing Headings = {_CrossReferenceSpreadsheet.ColumnHeadings.ToString()}";
 
-               case SpreadsheetFormatResult.DescriptionColumnMissing:
+               case SpreadsheetStatus.DescriptionColumnMissing:
                   return $"Description column is missing from cross reference spreadsheet. Check column name.\n Existing Headings = {_CrossReferenceSpreadsheet.ColumnHeadings.ToString()}";
 
-               case SpreadsheetFormatResult.RegisDescriptionColumnMissing:
+               case SpreadsheetStatus.RegisDescriptionColumnMissing:
                   return $"Regis Description column is missing from cross reference spreadsheet. Check column name.\n Existing Headings = {_CrossReferenceSpreadsheet.ColumnHeadings.ToString()}";
             }
 

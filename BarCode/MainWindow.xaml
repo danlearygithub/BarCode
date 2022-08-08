@@ -86,7 +86,7 @@
       <ProgressBar x:Name="ProgressBar" Style="{StaticResource ProgressBarStyle}"  />
 
       <Border Style="{StaticResource BorderStyle}" AllowDrop="True" Drop="Border_Drop"  Height="100" Width="{Binding ActualWidth, ElementName=SpreadsheetGroupBox}">
-         <TextBlock Style="{StaticResource MessageStyle}" Text="{Binding Path=DropMessage, Mode=OneWay}" d:Text="Drop file, multiple files or folder here." />
+         <TextBlock x:Name="DropMessageTextBlock" Style="{StaticResource MessageStyle}" Text="{Binding Path=DropMessage, Mode=OneWay}" d:Text="Drop file, multiple files or folder here." Width="900"/>
       </Border>
 
 
