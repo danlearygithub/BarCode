@@ -290,6 +290,8 @@ namespace BarCode
          SpreadsheetResult result;
          Product product;
          string barCode;
+         bool? dialogResult;
+         string message = string.Empty;
 
          var extension = Path.GetExtension(filename);
 
@@ -299,89 +301,96 @@ namespace BarCode
 
             _ExistingImageFile = new ImageFile(filename);
 
-            //(bool success, string rawBarCode, List<string> barCodes) = _ExistingImageFile.GetBarCodeUsingIronOcr();
-            (bool success, string rawBarCode, string modifiedBarCode, List<string> barCodes) = await _ExistingImageFile.GetBarCodeAsync();
+            (bool success, string rawBarCode, List<string> modifiedBarCodes) = await _ExistingImageFile.GetBarCodeAsync();
 
             if (success == true)
             {
-               barCode = modifiedBarCode;
+               // need to try all first
+               foreach (var modifiedBarCode in modifiedBarCodes)
+               {
+                  message = $"Trying '{modifiedBarCode}'.";
+                  _Console.WriteInfoLine(message);
+                  TraceBarCode.LogInfo(filename, message);
+
+                  (result, product) = _CrossReferenceSpreadsheet.FindProduct(filename, modifiedBarCode);
+
+                  if (result == SpreadsheetResult.Good)
+                  {
+                     (processImageResult, newFullPath) = ProcessBarCode(filename, product);
+
+                     if (processImageResult == ProcessImageResult.Saved)
+                     {
+                        _ExistingImageFile = null;
+                        _NewImageFile = null;
+
+                       // _Console.WriteGreenInfoLine($"Saved to '{newFullPath}'.");
+
+                        return (processImageResult, newFullPath, product);
+                     }
+                  }
+               }
             }
             else
             {
-               var m = $"Unable to determine barcode. Bar code read = '{rawBarCode}'";
+               TraceBarCode.LogError(filename, $"Unable to determine barcode. Raw Bar code = '{rawBarCode}'");
+            }
 
-               _Console.WriteRedInfoLine(filename, m);
-               TraceBarCode.LogError(filename, m);
-
-               var dialog = new BarCodeWindow();
-               dialog.Owner = this;
-
-               dialog.Image = filename;
-
-               bool? dialogResult = dialog.ShowDialog();
+            do
+            {
+               (dialogResult, barCode) = ShowBarCodeDialog(filename);
 
                if (dialogResult == true)
                {
-                  barCode = dialog.BarCode;
+                  (result, product) = _CrossReferenceSpreadsheet.FindProduct(filename, barCode);
+
+                  if (result == SpreadsheetResult.Good)
+                  {
+                     (processImageResult, newFullPath) = ProcessBarCode(filename, product);
+
+                     _ExistingImageFile = null;
+                     _NewImageFile = null;
+
+                     //_Console.WriteGreenInfoLine($"Saved to '{newFullPath}'.");
+
+                     return (processImageResult, newFullPath, product);
+                  }
+               }
+
+               if (string.IsNullOrEmpty(barCode))
+               {
+                  message = $"Unable to find barcode.\nDo you want to try again?";
                }
                else
                {
+                  message = $"Unable to find barcode '{barCode}'.\nDo you want to try again?";
+               }
+               var messageBoxResult = MessageBox.Show(message, "Not able to locate", MessageBoxButton.YesNo, MessageBoxImage.Error);
+
+               if (messageBoxResult == MessageBoxResult.No)
+               {
+                  if (string.IsNullOrEmpty(barCode))
+                  {
+                     message = $"Unable to determine barcode.";
+                  }
+                  else
+                  {
+                     message = $"Unable to determine barcode. Bar code = '{barCode}'.";
+                  }
+                  _Console.WriteRedInfoLine(filename, message);
+                  TraceBarCode.LogError(filename, message);
+
                   (processImageResult, newFullPath) = ProcessUnknownBarCode(filename);
 
-                  _Console.WriteGreenInfoLine($"Saved to '{newFullPath}'.");
+                  _Console.WriteRedInfoLine($"Saved to '{newFullPath}'.");
 
-                  return (ProcessImageResult.UnableToDetermineBarCode, newFullPath, null);
+                  return (ProcessImageResult.UnableToFindBarCode, newFullPath, null);
                }
-            }
 
-            //var newBarCodes = barCodes.ToList();
-
-            //// add one more with numbers on front and end and both
-            //foreach (var barCode in barCodes)
-            //{
-            //   for (int i = 0; i < 10; i++)
-            //   {
-            //      var front = i + 1;
-
-            //      newBarCodes.Add(front + barCode);
-            //      newBarCodes.Add(barCode + i);
-            //      newBarCodes.Add(front + barCode + i);
-            //   }
-            //}
-
-            //foreach (var barCode in newBarCodes)
-            //{
-            //var tryMessage = $"Trying to find '{barCode}'";
-
-            //_Console.WriteAttemptLine(tryMessage);
-            //TraceBarCode.LogVerbose(filename, tryMessage);
-
-            (result, product) = _CrossReferenceSpreadsheet.FindProduct(filename, barCode);
-
-            if (result == SpreadsheetResult.Good)
-            {
-               (processImageResult, newFullPath) = ProcessBarCode(filename, product);
-
-               _ExistingImageFile = null;
-               _NewImageFile = null;
-
-               return (processImageResult, newFullPath, product);
-            }
-            //}
-
-            var message = $"Unable to determine barcode. Bar code read = '{rawBarCode}'";
-            _Console.WriteRedInfoLine(filename, message);
-            TraceBarCode.LogError(filename, message);
-
-            (processImageResult, newFullPath) = ProcessUnknownBarCode(filename);
-
-            _Console.WriteGreenInfoLine($"Saved to '{newFullPath}'.");
-
-            return (ProcessImageResult.UnableToFindBarCode, newFullPath, null);
+            } while (true);
          }
          else
          {
-            var message = $"Image '{filename}' type {extension} is not supported. Only {Settings.SupportedImageFileTypesString} are supported.";
+            message = $"Image '{filename}' type {extension} is not supported. Only {Settings.SupportedImageFileTypesString} are supported.";
 
             _Console.WriteRedInfoLine(filename, message);
             MessageBox.Show(message, "Unsupported image type", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -391,6 +400,22 @@ namespace BarCode
 
             return (ProcessImageResult.UnSupportedFileType, null, null);
          }
+      }
+
+      private (bool? dialogResult, string barCode) ShowBarCodeDialog(string filename)
+      {
+         var dialog = new BarCodeWindow();
+         dialog.Owner = this;
+
+         dialog.Image = filename;
+
+         bool? dialogResult = dialog.ShowDialog();
+
+         if (dialogResult == true)
+         {
+            return (dialogResult, dialog.BarCode);
+         }
+         return (dialogResult, null);
       }
 
       private const string UNKNOWN_FOLDER = "Unknown Bar Codes";

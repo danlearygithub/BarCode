@@ -34,7 +34,7 @@ namespace BarCode
       {
       }
 
-      public async Task<(bool success, string rawBarCode, string modifiedText, List<string> barCodes)> GetBarCodeAsync()
+      public async Task<(bool success, string rawBarCode, List<string> modifiedBarCodes)> GetBarCodeAsync()
       {
          var barCode = await ReadBarCodeAsync();
          var newBarCode = ProcessBarCode(barCode.text, barCode.lines);
@@ -42,29 +42,43 @@ namespace BarCode
          return newBarCode;
       }
 
-      internal (bool success, string rawText, string modifiedText, List<string> barCodes) ProcessBarCode(string rawText, IList<string> rawLines)
+      internal (bool success, string rawText, List<string> modifiedBarCodes) ProcessBarCode(string rawText, IList<string> rawLines)
       {
          TraceBarCode.LogVerbose($"ProcessBarCode '{FullPath}'", $"rawLines.Count='{rawLines.Count}'");
 
          bool success;
          string modifiedBarCodeText;
-         List<string> barCodes = new List<string>();
+         List<string> modifiedBarCodes = new List<string>();
 
          (success, modifiedBarCodeText) = Process(rawText);
 
-         foreach (var rawLine in rawLines)
+         if (success)
          {
-            (bool processRawLineSuccess, string modifiedBarCode) = Process(rawLine);
+            modifiedBarCodes.Add(modifiedBarCodeText);
+         }
 
-            if (processRawLineSuccess == true)
+         // add 8 number on front and 0-9 on back since seem more common
+         for (int back = 0; back <= 9; back++)
+         {
+            modifiedBarCodes.Add("8" + modifiedBarCodeText + back);
+         }
+
+         // add 1-9 excluding 8 on front and 0-9 on back
+         for (int front = 1; front <= 9; front++)
+         {
+            if (front != 8)
             {
-               barCodes.Add(modifiedBarCode);
+               for (int back = 0; back <= 9; back++)
+               {
+                  modifiedBarCodes.Add(front + modifiedBarCodeText + back);
+               }
+
             }
          }
 
-         var distinctBarCodes = barCodes.Distinct().ToList();
+         var distinctBarCodes = modifiedBarCodes.Distinct().ToList();
 
-         return (success, rawText, modifiedBarCodeText, distinctBarCodes);
+         return (success, rawText, distinctBarCodes);
       }
 
       private (bool success, string modifiedBarCode) Process(string rawLine)
@@ -189,7 +203,7 @@ namespace BarCode
       //   using (var Input = new OcrInput(FullPath))
       //   {
       //      var Result = ocr.Read(Input);
-            
+
       //         lines = ProcessOcrLinesForIronOcr(Result);
 
       //      Console.WriteLine(Result.Text);

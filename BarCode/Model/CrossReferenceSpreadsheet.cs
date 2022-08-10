@@ -252,7 +252,7 @@ namespace BarCode
          Excel.Range resultRange = colRange.Find(
                       What: UPC,
                       LookIn: Excel.XlFindLookIn.xlValues,
-                      LookAt: Excel.XlLookAt.xlPart,
+                      LookAt: Excel.XlLookAt.xlWhole,
                       SearchOrder: Excel.XlSearchOrder.xlByRows,
                       SearchDirection: Excel.XlSearchDirection.xlNext
 

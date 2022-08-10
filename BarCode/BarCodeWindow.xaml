@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BarCode"
         mc:Ignorable="d"
-        Title="Bar Code"
+        Title="Enter Bar Code"
         Closing="Window_Closing" 
         MinHeight="200" MinWidth="600" SizeToContent="WidthAndHeight" 
         ResizeMode="NoResize" ShowInTaskbar="False"

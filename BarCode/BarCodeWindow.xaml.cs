@@ -52,7 +52,7 @@ namespace BarCode
 
       }
 
-      public string BarCode => UPCBarCode.Text;
+      public string BarCode => UPCBarCode.Text.Trim();
 
    }
 }
