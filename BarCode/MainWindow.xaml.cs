@@ -234,7 +234,10 @@ namespace BarCode
                break;
 
             case ProcessImageResult.Saved:
-               _Console.WriteGreenInfoLine($"UPC Code = '{product.UPC}'. Saved to '{newFullPath}'.");
+               var message = $"UPC Code = '{product.UPC}'. Saved to '{newFullPath}'.";
+               _Console.WriteGreenInfoLine(message);
+               TraceBarCode.LogInfo(processImageResult.ToString(), message);
+
                break;
 
             case ProcessImageResult.UnableToDetermineBarCode:
@@ -243,9 +246,10 @@ namespace BarCode
 
             case ProcessImageResult.UnableToFindBarCode:
                //_Console.WriteRedInfoLine($"Unable to find bar code from '{newFullPath}'");
+
                break;
             case ProcessImageResult.UnSupportedFileType:
-               // do nothing - popup already happened
+               // do nothing - already processed
                break;
 
             default:
@@ -341,6 +345,8 @@ namespace BarCode
 
                if (dialogResult == true)
                {
+                  TraceBarCode.LogInfo(filename, $"User entered {barCode}");
+                  
                   (result, product) = _CrossReferenceSpreadsheet.FindProduct(filename, barCode);
 
                   if (result == SpreadsheetResult.Good)
@@ -349,8 +355,6 @@ namespace BarCode
 
                      _ExistingImageFile = null;
                      _NewImageFile = null;
-
-                     //_Console.WriteGreenInfoLine($"Saved to '{newFullPath}'.");
 
                      return (processImageResult, newFullPath, product);
                   }
